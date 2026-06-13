@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>거여동성당 묵주기도 고리기도 봉헌 시간표</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght=400;600&family=Noto+Sans+KR:wght=300;400;500&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -59,7 +59,6 @@
 
   .container { max-width: 640px; margin: 0 auto; padding: 1rem 0.5rem 3rem; }
 
-  /* Toolbar */
   .toolbar {
     display: flex;
     align-items: center;
@@ -88,7 +87,6 @@
     justify-content: center;
   }
 
-  /* View Tabs */
   .view-tabs { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
   .tab {
     background: var(--surface);
@@ -97,12 +95,10 @@
     font-size: 13px;
     cursor: pointer;
     color: var(--text-secondary);
-    font-family: 'Noto Sans KR', sans-serif;
   }
   .tab:first-child { border-right: 1px solid var(--border); }
   .tab.active { background: var(--accent); color: #fff; }
 
-  /* Calendar Grid */
   .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -127,9 +123,7 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    transition: background 0.1s;
   }
-  .cal-day:hover { background: #fdfcf9; }
   .cal-day.past { background: transparent; border-color: transparent; opacity: 0.4; cursor: default; }
   .cal-day.today { background: var(--today-bg); border: 1.5px solid var(--today-border); }
   .cal-day.empty { background: transparent; border-color: transparent; cursor: default; }
@@ -158,7 +152,6 @@
     text-align: center;
   }
 
-  /* List View Styling */
   .list-wrapper { display: none; padding: 0 0.5rem; }
   .date-section { margin-bottom: 1.25rem; }
   .date-header {
@@ -179,7 +172,6 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
   }
   .list-item.is-today { border-color: var(--today-border); background: var(--today-bg); }
   .item-main { display: flex; align-items: center; gap: 10px; }
@@ -202,12 +194,10 @@
     font-size: 12px;
     padding: 4px 8px;
     border-radius: 4px;
-    font-family: inherit;
   }
   .btn-action-text.mod { color: var(--accent); background: var(--accent-light); }
   .btn-action-text.del { color: #c0504e; background: #fde8e8; }
 
-  /* Modals (Popups) */
   .modal {
     display: none;
     position: fixed;
@@ -236,68 +226,17 @@
     margin-bottom: 15px;
     outline: none;
   }
-  .modal input:focus { border-color: var(--accent-mid); }
   .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
   .modal button { padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-family: inherit; }
   .btn-modal-save { background: var(--accent); color: white; }
   .btn-modal-cancel { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
 
-  /* Expanded View List in Modal */
-  .expanded-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 15px;
-    max-height: 200px;
-    overflow-y: auto;
-  }
-  .expanded-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--bg);
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-  }
+  .expanded-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; max-height: 200px; overflow-y: auto; }
+  .expanded-item { display: flex; align-items: center; justify-content: space-between; background: var(--bg); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); }
   .expanded-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
-  .btn-add-new-block {
-    width: 100%;
-    background: var(--accent-light);
-    color: var(--accent);
-    border: 1px dashed var(--accent-mid);
-    padding: 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    margin-bottom: 10px;
-    text-align: center;
-  }
+  .btn-add-new-block { width: 100%; background: var(--accent-light); color: var(--accent); border: 1px dashed var(--accent-mid); padding: 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; margin-bottom: 10px; text-align: center; }
 
-  .btn-scroll-top {
-    position: fixed;
-    bottom: 25px;
-    right: 25px;
-    width: 44px;
-    height: 44px;
-    background: var(--accent);
-    color: #ffffff;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    font-weight: bold;
-    z-index: 999;
-    transition: background 0.15s, transform 0.15s;
-  }
-  .btn-scroll-top:active { transform: scale(0.9); }
-
-  .site-footer { text-align: center; padding: 2rem 1rem; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); margin-top: 2rem; }
+  .btn-scroll-top { position: fixed; bottom: 25px; right: 25px; width: 44px; height: 44px; background: var(--accent); color: #ffffff; border: none; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; z-index: 999; }
 </style>
 </head>
 <body>
@@ -349,17 +288,9 @@
 
 <button class="btn-scroll-top" id="btn-top" onclick="scrollToTop()">↑</button>
 
-
-<footer class="site-footer">
-  지나간 날짜의 기도 봉헌은 자동으로 가려집니다
-</footer>
-
 <script>
-// ⚠️ 여기에 구글 Apps Script 웹앱 URL 주소 딱 하나만 넣어주세요!
-const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3x6e1yKMlTF02yBNCRynuuAgT_4ps0uTKP_adYQQ52WShqbpEEtRAzHkBaY83Qulr/exec';
-
-const usePassword = true; 
-const PASSWORD_VALUE = "1004";
+// ⚠️ 여기에 구글 Apps Script 새로 배포한 웹앱 URL 주소를 넣어주세요!
+const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbytlOBd8_3smnC5hDwgE6U1M_Zh95EAnt2Y8SeK0tZwVO6INTVzFi6QbwKNsnK31h8/exec';
 
 const DAYS = ['일','월','화','수','목','금','토'];
 const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
@@ -388,43 +319,31 @@ window.onscroll = function() {
   }
 };
 
-function scrollToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
-// 구글 웹 앱을 통해 실시간(0초)으로 데이터를 다이렉트 로드하도록 완전히 변경
+// A1 셀에서 전체 데이터 한 번에 가져오기
 async function fetchEntries() {
-  if(!SCRIPT_WEB_APP_URL || SCRIPT_WEB_APP_URL.includes('YOUR_APPS_SCRIPT')) {
-    entries = JSON.parse(localStorage.getItem('rosary_local_backup') || '[]');
-    render();
-    return;
-  }
-  
+  if(!SCRIPT_WEB_APP_URL || SCRIPT_WEB_APP_URL.includes('YOUR_APPS_SCRIPT')) return;
   try {
     const response = await fetch(SCRIPT_WEB_APP_URL);
     const data = await response.json();
     if (Array.isArray(data)) {
       entries = data;
-      localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
       render();
     }
-  } catch (error) {
-    console.warn("로컬 백업 데이터 로드:", error);
-    entries = JSON.parse(localStorage.getItem('rosary_local_backup') || '[]');
-    render();
-  }
+  } catch (error) { console.warn("데이터 로드 실패:", error); }
 }
 
-async function sendToGoogle(data) {
-  if(SCRIPT_WEB_APP_URL && !SCRIPT_WEB_APP_URL.includes('YOUR_APPS_SCRIPT')) {
-    try {
-      await fetch(SCRIPT_WEB_APP_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' }, // CORS 충돌 원천 차단
-        body: JSON.stringify(data)
-      });
-    } catch(e) { console.error(e); }
-  }
+// A1 셀에 전체 데이터 한 번에 저장하기
+async function saveAllToGoogle() {
+  if(!SCRIPT_WEB_APP_URL || SCRIPT_WEB_APP_URL.includes('YOUR_APPS_SCRIPT')) return;
+  try {
+    await fetch(SCRIPT_WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(entries)
+    });
+  } catch(e) { console.error(e); }
 }
 
 function setView(v) {
@@ -467,9 +386,7 @@ function renderCalendar() {
             <div class="day-number" style="${numColor}">${d}</div>
             <div class="chips-container">`;
     if (!isPast) {
-      names.forEach(name => {
-        h += `<div class="entry-chip-simple">${name}</div>`;
-      });
+      names.forEach(name => { h += `<div class="entry-chip-simple">${name}</div>`; });
     }
     h += `</div></div>`;
   }
@@ -507,11 +424,10 @@ function renderList() {
               <div class="date-header ${isT?'is-today':''}">${m}월 ${d}일 ${DAYS[dt.getDay()]}요일 ${isT?'· 오늘':''}</div>`;
       lastDate = e.date;
     }
-    h += `<div class="list-item ${e.date===todayStr?'is-today':''}">
+    h += `<div class="list-item">
             <div class="item-main">
               <div class="item-dot"></div>
               <span class="item-name">${e.name}</span>
-              ${e.date===todayStr?'<span class="today-badge">오늘</span>':''}
             </div>
             <div class="item-actions-group">
               <button class="btn-action-text mod" onclick="openInputModal('${e.date}', '${e.name}')">수정</button>
@@ -533,7 +449,6 @@ function openDetailModal(dateStr, isPast) {
   listEl.innerHTML = "";
   
   const dayEntries = entries.filter(e => e.date === dateStr);
-  
   if (dayEntries.length === 0) {
     listEl.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:1rem 0; font-size:14px;">등록된 봉헌 명단이 없습니다.</div>';
   } else {
@@ -548,7 +463,6 @@ function openDetailModal(dateStr, isPast) {
         </div>`;
     });
   }
-  
   document.getElementById('detail-modal').style.display = 'flex';
 }
 
@@ -561,59 +475,38 @@ function openInputModal(dateStr, oldName = "") {
   editingOldName = oldName;
   
   const [y, m, d] = dateStr.split('-');
-  const titleText = oldName ? `${parseInt(m)}월 ${parseInt(d)}일 명단 수정` : `${parseInt(m)}월 ${parseInt(d)}일 새 봉헌 등록`;
-  document.getElementById('modal-date-label').textContent = titleText;
+  document.getElementById('modal-date-label').textContent = oldName ? `${parseInt(m)}월 ${parseInt(d)}일 명단 수정` : `${parseInt(m)}월 ${parseInt(d)}일 새 봉헌 등록`;
   document.getElementById('modal-name-input').value = oldName;
-  
   document.getElementById('input-modal').style.display = 'flex';
   document.getElementById('modal-name-input').focus();
 }
 
-function closeInputModal() {
-  document.getElementById('input-modal').style.display = 'none';
-  editingOldName = "";
-}
+function closeInputModal() { document.getElementById('input-modal').style.display = 'none'; editingOldName = ""; }
 
 async function saveModalData() {
   const newName = document.getElementById('modal-name-input').value.trim();
   if (!newName) { alert('이름을 입력해 주세요.'); return; }
   
-  if (usePassword) {
-    const pw = prompt("수정 비밀번호를 입력하세요:");
-    if (pw !== PASSWORD_VALUE) { alert("비밀번호가 틀렸습니다."); return; }
-  }
-
   if (editingOldName) {
-    await sendToGoogle({ action: "delete", date: selectedDateStr, name: editingOldName });
     entries = entries.filter(e => !(e.date === selectedDateStr && e.name === editingOldName));
   }
   
-  await sendToGoogle({ action: "insert", date: selectedDateStr, name: newName });
   entries.push({ date: selectedDateStr, name: newName });
-  
-  localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
-  
-  alert('저장되었습니다!');
-  closeInputModal();
   render();
-  setTimeout(fetchEntries, 1000); // 1초 뒤 다이렉트 실시간 갱신
+  closeInputModal();
+  
+  // 변경된 전체 데이터를 구글 시트 A1 셀에 즉시 세이브
+  await saveAllToGoogle();
 }
 
 async function deleteData(dateStr, name) {
   if (!confirm(`${name} 님의 기도를 삭제할까요?`)) return;
-  if (usePassword) {
-    const pw = prompt("수정 비밀번호를 입력하세요:");
-    if (pw !== PASSWORD_VALUE) { alert("비밀번호가 틀렸습니다."); return; }
-  }
   
-  await sendToGoogle({ action: "delete", date: dateStr, name: name });
   entries = entries.filter(e => !(e.date === dateStr && e.name === name));
-  localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
-  
-  alert('삭제되었습니다.');
-  closeDetailModal();
   render();
-  setTimeout(fetchEntries, 1000);
+  closeDetailModal();
+  
+  await saveAllToGoogle();
 }
 
 function render() {
