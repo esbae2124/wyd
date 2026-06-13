@@ -1,259 +1,218 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>묵주기도 봉헌 시간표</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap');
-    
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    :root {
-      --bg: #f7f5f0;
-      --surface: #ffffff;
-      --border: #e2ddd6;
-      --text-primary: #1a1814;
-      --text-secondary: #6b6560;
-      --text-muted: #9e9990;
-      --accent: #7a5c3a;
-      --accent-light: #f0e8de;
-      --accent-mid: #c4a882;
-      --today-bg: #f0ebe3;
-      --today-border: #8b6c47;
-      --success-bg: #edf4ee;
-      --success-border: #7aad7e;
-      --success-text: #2d6b32;
-      --admin-bar-bg: #3b2a1a;
-    }
-    
-    body {
-      font-family: 'Noto Sans KR', sans-serif;
-      background: var(--bg);
-      color: var(--text-primary);
-      min-height: 100vh;
-      font-size: 15px;
-      line-height: 1.6;
-      overscroll-behavior: none;
-    }
-    
-    /* ── 관리자 바 ── */
-    .admin-bar {
-      display: none;
-      background: var(--admin-bar-bg);
-      color: #e8d9c4;
-      font-size: 12px;
-      padding: 7px 16px;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .admin-bar.visible { display: flex; }
-    .admin-bar-left { display: flex; align-items: center; gap: 8px; }
-    .admin-dot { width: 7px; height: 7px; border-radius: 50%; background: #c4a882; }
-    
-    .btn-logout {
-      background: transparent; border: 1px solid #6b5040; border-radius: 5px;
-      color: #c4a882; font-size: 11px; padding: 3px 10px; cursor: pointer;
-    }
-    .btn-logout:hover { background: #4a3322; }
-    
-    /* ── 헤더 ── */
-    .site-header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 2rem 1rem 1.5rem;
-      text-align: center;
-    }
-    .cross-symbol { display: block; font-size: 26px; color: var(--accent-mid); margin-bottom: 8px; }
-    .site-title {
-      font-family: 'Noto Serif KR', serif;
-      font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px;
-    }
-    .site-subtitle { font-size: 12px; color: var(--text-muted); letter-spacing: 0.05em; }
-    .divider-ornament {
-      display: flex; align-items: center; justify-content: center;
-      gap: 8px; margin: 12px auto 0; color: var(--accent-mid); font-size: 11px;
-    }
-    .divider-ornament::before, .divider-ornament::after {
-      content: ''; display: block; width: 36px; height: 0.5px; background: var(--accent-mid);
-    }
-    
-    /* ── 컨테이너 ── */
-    .container { max-width: 760px; margin: 0 auto; padding: 1.25rem 0.75rem 4rem; }
-    
-    /* ── 툴바 ── */
-    .toolbar {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 1rem; flex-wrap: wrap; gap: 8px;
-    }
-    .month-nav { display: flex; align-items: center; gap: 6px; }
-    .month-label {
-      font-family: 'Noto Serif KR', serif; font-size: 15px; font-weight: 600;
-      min-width: 90px; text-align: center; color: var(--text-primary);
-    }
-    .btn-nav {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
-      width: 30px; height: 30px; cursor: pointer; display: flex; align-items: center;
-      justify-content: center; font-size: 14px; color: var(--text-secondary);
-    }
-    .btn-nav:hover { background: var(--accent-light); }
-    
-    .toolbar-right { display: flex; gap: 6px; align-items: center; }
-    .btn-admin-toggle {
-      background: transparent; border: 1px solid var(--border); border-radius: 6px;
-      padding: 5px 12px; font-size: 12px; cursor: pointer; color: var(--text-muted);
-    }
-    .btn-admin-toggle.active { background: var(--admin-bar-bg); border-color: var(--admin-bar-bg); color: #e8d9c4; }
-    
-    /* ── 달력 ── */
-    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
-    .cal-header { text-align: center; font-size: 11px; color: var(--text-muted); padding: 4px 0 5px; }
-    
-    .cal-day {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 7px;
-      min-height: 72px; padding: 5px 4px; overflow: hidden; cursor: pointer;
-      transition: border-color 0.15s, box-shadow 0.15s; position: relative;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .cal-day:active { opacity: 0.8; }
-    .cal-day.past { background: transparent; border-color: transparent; opacity: 0.35; cursor: default; }
-    .cal-day.past:active { opacity: 0.35; }
-    .cal-day.today { background: var(--today-bg); border-color: var(--today-border); }
-    .cal-day.has-entry { border-color: var(--success-border); }
-    .cal-day.empty { background: transparent; border-color: transparent; cursor: default; }
-    
-    .day-number { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; font-weight: 500; }
-    .cal-day.today .day-number { color: var(--accent); font-weight: bold; }
-    
-    .entry-chip {
-      display: block; background: var(--success-bg); color: var(--success-text);
-      font-size: 9px; border-radius: 3px; padding: 1px 3px; margin-top: 2px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4;
-    }
-    .entry-chip.admin-chip { background: var(--accent-light); color: var(--accent); }
-    
-    /* ── 슬라이드업 바텀 시트 ── */
-    .sheet-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.4); z-index: 100;
-      animation: fadeIn 0.2s ease;
-    }
-    .sheet-overlay.open { display: block; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    
-    .bottom-sheet {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: var(--surface); border-radius: 20px 20px 0 0;
-      max-height: 85vh; overflow-y: auto;
-      z-index: 101; padding: 0 0 env(safe-area-inset-bottom, 16px);
-      transform: translateY(100%);
-      transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1);
-      box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
-    }
-    .bottom-sheet.open { transform: translateY(0); }
-    .sheet-handle { width: 40px; height: 5px; background: var(--border); border-radius: 3px; margin: 12px auto 0; }
-    
-    .sheet-header {
-      padding: 14px 20px 12px;
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .sheet-date-label { font-family: 'Noto Serif KR', serif; font-size: 16px; font-weight: 600; color: var(--text-primary); }
-    .sheet-date-label span { font-size: 12px; font-weight: 400; color: var(--text-muted); margin-left: 6px; }
-    
-    .btn-sheet-close {
-      background: var(--bg); border: none; border-radius: 50%;
-      width: 28px; height: 28px; cursor: pointer; font-size: 13px;
-      color: var(--text-secondary); display: flex; align-items: center; justify-content: center;
-    }
-    
-    .sheet-body { padding: 16px 20px 24px; }
-    
-    /* 시트 안 리스트 항목 */
-    .sheet-entry {
-      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
-      padding: 12px 14px; margin-bottom: 8px;
-    }
-    .sheet-entry.is-admin { border-color: var(--accent-mid); background: var(--accent-light); }
-    .sheet-entry-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-    .sheet-entry-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
-    .sheet-entry-meta { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
-    
-    .sheet-admin-btns { display: flex; gap: 4px; flex-shrink: 0; }
-    .btn-se-edit, .btn-se-del {
-      border: 1px solid var(--border); background: var(--surface); border-radius: 5px;
-      padding: 3px 9px; font-size: 11px; cursor: pointer;
-    }
-    .btn-se-edit { color: var(--accent); }
-    .btn-se-edit:hover { background: var(--accent-light); border-color: var(--accent-mid); }
-    .btn-se-del { color: #a04040; border-color: #e0c8c8; }
-    .btn-se-del:hover { background: #fde8e8; }
-    
-    /* 수정/등록 폼 스타일 */
-    .sheet-edit-form, .sheet-add-form {
-      background: var(--surface); border: 1px solid var(--accent-mid);
-      border-radius: 10px; padding: 14px; margin-bottom: 8px;
-    }
-    .sheet-add-form { background: var(--accent-light); }
-    
-    .sheet-edit-form h4, .sheet-add-form h4 { font-size: 12px; color: var(--accent); margin-bottom: 10px; font-weight: 500; }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-    .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
-    
-    .form-group { display: flex; flex-direction: column; gap: 3px; }
-    .form-group label { font-size: 11px; color: var(--text-muted); }
-    .form-group input, .form-group select {
-      font-size: 13px; font-family: inherit;
-      border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px;
-      background: var(--bg); color: var(--text-primary); outline: none;
-    }
-    .form-group input:focus, .form-group select:focus { border-color: var(--accent-mid); background: #fff; }
-    
-    .form-actions { display: flex; gap: 8px; margin-top: 10px; }
-    .btn-submit { background: var(--accent); border: none; border-radius: 6px; padding: 7px 16px; font-size: 13px; cursor: pointer; color: #fff; }
-    .btn-cancel-form { background: transparent; border: 1px solid var(--border); border-radius: 6px; padding: 7px 12px; font-size: 13px; cursor: pointer; color: var(--text-secondary); }
-    
-    .sheet-empty { text-align: center; padding: 1.5rem 0; color: var(--text-muted); font-size: 13px; }
-    
-    .sheet-add-btn {
-      width: 100%; background: transparent; border: 1px dashed var(--accent-mid);
-      border-radius: 10px; padding: 11px; font-size: 13px; color: var(--accent);
-      cursor: pointer; margin-top: 4px;
-    }
-    .sheet-add-btn:hover { background: var(--accent-light); }
-    
-    /* 동기화 레이블 */
-    .sync-indicator { font-size: 11px; color: var(--text-muted); padding: 4px 8px; display: none; align-items: center; gap: 5px; }
-    .sync-indicator.visible { display: flex; }
-    .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-mid); animation: pulse 1.2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
-    
-    .site-footer { text-align: center; padding: 1.5rem 1rem; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border); margin-top: 2rem; }
-    
-    @media (max-width: 480px) {
-      .cal-day { min-height: 62px; }
-      .form-grid.three { grid-template-columns: 1fr 1fr; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>거여동성당 묵주기도 고리기도 봉헌 시간표</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght=400;600&family=Noto+Sans+KR:wght=300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --border: #e2ddd6;
+    --text-primary: #1a1814;
+    --text-secondary: #6b6560;
+    --text-muted: #9e9990;
+    --accent: #7a5c3a;
+    --accent-light: #f0e8de;
+    --accent-mid: #c4a882;
+    --today-bg: #f0ebe3;
+    --today-border: #8b6c47;
+    --success-bg: #edf4ee;
+    --success-border: #7aad7e;
+    --success-text: #2d6b32;
+  }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .site-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 1rem 1.5rem;
+    text-align: center;
+  }
+  .cross-symbol {
+    display: block;
+    font-size: 24px;
+    color: var(--accent-mid);
+    margin-bottom: 5px;
+  }
+  .site-title {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .site-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .container { max-width: 640px; margin: 0 auto; padding: 1rem 0.5rem 3rem; }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding: 0 0.5rem;
+  }
+  .month-nav { display: flex; align-items: center; gap: 10px; }
+  .month-label {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 16px;
+    font-weight: 600;
+    min-width: 90px;
+    text-align: center;
+  }
+  .btn-nav {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .view-tabs { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .tab {
+    background: var(--surface);
+    border: none;
+    padding: 5px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text-secondary);
+  }
+  .tab:first-child { border-right: 1px solid var(--border); }
+  .tab.active { background: var(--accent); color: #fff; }
+
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .cal-header {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 5px 0;
+  }
+  .cal-header:first-child { color: #c0594e; }
+  .cal-header:last-child { color: #5a82c0; }
+  
+  .cal-day {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-height: 90px;
+    padding: 6px 4px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .cal-day.past { background: transparent; border-color: transparent; opacity: 0.4; cursor: default; }
+  .cal-day.today { background: var(--today-bg); border: 1.5px solid var(--today-border); }
+  .cal-day.empty { background: transparent; border-color: transparent; cursor: default; }
+  
+  .day-number { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+  .cal-day.today .day-number { color: var(--accent); font-weight: bold; }
+  
+  .chips-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 4px;
+    flex-grow: 1;
+    justify-content: flex-start;
+  }
+  .entry-chip-simple {
+    background: var(--success-bg);
+    color: var(--success-text);
+    font-size: 10px;
+    font-weight: 500;
+    border-radius: 3px;
+    padding: 1px 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+  }
+
+  .list-wrapper { display: none; padding: 0 0.5rem; }
+  .date-section { margin-bottom: 1.25rem; }
+  .date-header {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .list-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .item-main { display: flex; align-items: center; gap: 10px; }
+  .item-dot { width: 6px; height: 6px; background: var(--success-border); border-radius: 50%; }
+  .item-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+  }
+  .modal-content {
+    background: var(--surface);
+    padding: 1.5rem;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 340px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+  .modal h3 { font-family: 'Noto Serif KR', serif; font-size: 16px; margin-bottom: 12px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 15px; }
+  .modal button { padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-family: inherit; }
+  .btn-modal-cancel { background: var(--accent); color: white; }
+
+  .expanded-list { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+  .expanded-item { display: flex; align-items: center; background: var(--bg); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); }
+  .expanded-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+
+  .btn-scroll-top { position: fixed; bottom: 25px; right: 25px; width: 44px; height: 44px; background: var(--accent); color: #ffffff; border: none; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; z-index: 999; }
+  .site-footer { text-align: center; padding: 2rem 1rem; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); margin-top: 2rem; }
+</style>
 </head>
 <body>
 
-<div class="admin-bar" id="admin-bar">
-  <div class="admin-bar-left">
-    <div class="admin-dot"></div>
-    <span>관리자 모드</span>
-  </div>
-  <div style="display:flex; align-items:center; gap:10px;">
-    <div class="sync-indicator" id="sync-indicator"><div class="sync-dot"></div><span id="sync-msg">동기화 중...</span></div>
-    <button class="btn-logout" onclick="logout()">로그아웃</button>
-  </div>
-</div>
-
 <header class="site-header">
   <span class="cross-symbol">✝</span>
-  <h1 class="site-title">묵주기도 봉헌 시간표</h1>
-  <p class="site-subtitle">성모 경당 · 매일 끊임없이 이어지는 기도</p>
-  <div class="divider-ornament">· · ·</div>
+  <h1 class="site-title">거여동성당 묵주기도 고리기도 봉헌 시간표</h1>
+  <p class="site-subtitle">날짜를 터치하여 봉헌 명단을 확인하세요</p>
 </header>
 
 <main class="container">
@@ -263,426 +222,210 @@
       <span class="month-label" id="month-label"></span>
       <button class="btn-nav" onclick="nextMonth()">&#8250;</button>
     </div>
-    <div class="toolbar-right">
-      <div class="sync-indicator" id="sync-indicator-view"><div class="sync-dot"></div><span>불러오는 중...</span></div>
-      <button class="btn-admin-toggle" id="btn-admin-toggle" onclick="toggleAdmin()">관리자</button>
+    <div class="view-tabs">
+      <button class="tab active" id="tab-calendar" onclick="setView('calendar')">달력</button>
+      <button class="tab" id="tab-list" onclick="setView('list')">목록</button>
     </div>
   </div>
 
   <div id="view-calendar"></div>
+  <div id="view-list" class="list-wrapper"></div>
 </main>
 
-<footer class="site-footer">지나간 날짜의 기도 봉헌은 자동으로 사라집니다</footer>
-
-<div class="sheet-overlay" id="sheet-overlay" onclick="closeSheet()"></div>
-<div class="bottom-sheet" id="bottom-sheet">
-  <div class="sheet-handle"></div>
-  <div class="sheet-header">
-    <div class="sheet-date-label" id="sheet-date-label">날짜 정보</div>
-    <button class="btn-sheet-close" onclick="closeSheet()">✕</button>
+<div class="modal" id="detail-modal">
+  <div class="modal-content">
+    <h3 id="detail-modal-label">0월 0일 봉헌 현황</h3>
+    <div class="expanded-list" id="detail-modal-list"></div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" style="width:100%" onclick="closeDetailModal()">닫기</button>
+    </div>
   </div>
-  <div class="sheet-body" id="sheet-body"></div>
 </div>
 
+<button class="btn-scroll-top" id="btn-top" onclick="scrollToTop()">↑</button>
+
+<footer class="site-footer">
+  지나간 날짜의 기도 봉헌은 자동으로 가려집니다
+</footer>
+
 <script>
-  const ADMIN_PW = '1004';
-  const REPEAT_LABEL = { none:'', daily:'매일', weekly:'매주', monthly:'매월' };
-  const DAYS = ['일','월','화','수','목','금','토'];
-  
-  // 🔽 [중요] 여기에 구글 앱스 스크립트 웹앱 주소를 넣어주세요 🔽
-  let scriptUrl = 'https://script.google.com/macros/s/AKfycbyt8lC02J3n4ZDI7I-VC7spXhsjmkymxCzZ6nAARHuVckqFD74iD2MrBwxG-EHmw4vMpg/exec';
-  
-  let entries = [];
-  let isAdmin = false;
-  let curYear, curMonth;
-  let sheetDate = null; 
-  let editingId = null;
-  let showAddForm = false;
+// ⚠️ 여기에 새로 배포하여 딴 구글 웹앱 URL 주소를 매칭해 주세요!
+const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwymz_glZn7zD22nGD3YmatV-F8YGYF6w3UnXwUNSZ2U9Djc7kcdLrx9FYu_tsBn7Qm/exec';
 
-  /* ── 구글 시트 데이터 로드/저장 (A1 셀 이용 구조) ── */
-  async function loadData() {
-    if (!scriptUrl || scriptUrl.includes('여기에')) return;
-    showSync(true, '불러오는 중...');
-    try {
-      const res = await fetch(scriptUrl + '?t=' + Date.now());
-      const text = await res.text();
-      entries = JSON.parse(text || '[]');
-    } catch(e) {
-      console.warn('구글 시트 연동 실패 또는 데이터 공백', e);
-    }
-    showSync(false);
-    render();
-  }
+const DAYS = ['일','월','화','수','목','금','토'];
+const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
-  async function saveData() {
-    if (!scriptUrl || scriptUrl.includes('여기에')) { alert('Apps Script URL이 고정되지 않았습니다.'); return false; }
-    showSync(true, '저장 중...');
-    try {
-      await fetch(scriptUrl, {
-        method: 'POST',
-        body: JSON.stringify(entries),
-        headers: { 'Content-Type': 'text/plain' }
-      });
-      showSync(false);
-      return true;
-    } catch(e) {
-      showSync(false);
-      alert('구글 시트 실시간 저장 실패. 네트워크를 확인해 주세요.');
-      return false;
-    }
-  }
+let view = 'calendar';
+let curYear, curMonth;
+let entries = []; 
 
-  function showSync(on, msg) {
-    ['sync-indicator','sync-indicator-view'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.classList.toggle('visible', on);
-    });
-    const m = document.getElementById('sync-msg');
-    if (m && msg) m.textContent = msg;
-  }
+function toDateStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function todayDate() {
+  const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+}
 
-  /* ── 날짜 계산 함수 ── */
-  function toDateStr(d) {
-    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-  }
-  function parseDate(s) { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
-  function todayDate() { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
-  function todayStr() { return toDateStr(todayDate()); }
-
-  /* ── 달력 내 반복 일정 전개 (지나간 날짜 자동 소멸) ── */
-  function getExpandedForMonth(year, month) {
-    const start = new Date(year, month, 1);
-    const end = new Date(year, month+1, 0);
-    const td = todayDate();
-    const result = [];
-    const seen = new Set();
-
-    entries.forEach(e => {
-      const base = parseDate(e.date);
-      function push(d) {
-        const key = e.id + '|' + toDateStr(d);
-        if (!seen.has(key) && d >= td) { 
-          seen.add(key); 
-          result.push({ ...e, displayDate: toDateStr(d) }); 
-        }
-      }
-      if (e.repeat === 'none') {
-        if (base >= td && base >= start && base <= end) push(base);
-      } else if (e.repeat === 'daily') {
-        for (let d = new Date(Math.max(start.getTime(), td.getTime())); d <= end; d = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1)) push(new Date(d));
-      } else if (e.repeat === 'weekly') {
-        const dow = base.getDay();
-        for (let d = new Date(Math.max(start.getTime(), td.getTime())); d <= end; d = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1))
-          if (d.getDay() === dow) push(new Date(d));
-      } else if (e.repeat === 'monthly') {
-        const c = new Date(year, month, base.getDate());
-        if (c >= start && c <= end) push(c);
-      }
-    });
-    return result;
-  }
-
-  function getEntriesForDate(dateStr) {
-    const td = todayDate();
-    const dt = parseDate(dateStr);
-    const result = [];
-    const seen = new Set();
-
-    entries.forEach(e => {
-      const base = parseDate(e.date);
-      let matches = false;
-      if (e.repeat === 'none') matches = (e.date === dateStr);
-      else if (e.repeat === 'daily') matches = (dt >= td);
-      else if (e.repeat === 'weekly') matches = (base.getDay() === dt.getDay() && dt >= base && dt >= td);
-      else if (e.repeat === 'monthly') matches = (base.getDate() === dt.getDate() && dt >= base && dt >= td);
-      
-      if (matches && !seen.has(e.id)) { seen.add(e.id); result.push(e); }
-    });
-    result.sort((a,b) => (a.start||'').localeCompare(b.start||''));
-    return result;
-  }
-
-  /* ── 달력 렌더링 (간략히 작게 노출) ── */
-  function renderCalendar() {
-    const el = document.getElementById('view-calendar');
-    const firstDay = new Date(curYear, curMonth, 1).getDay();
-    const daysInMonth = new Date(curYear, curMonth+1, 0).getDate();
-    const td = todayDate();
-    const tStr = todayStr();
-    const exp = getExpandedForMonth(curYear, curMonth);
-    
-    const byDate = {};
-    exp.forEach(e => { if (!byDate[e.displayDate]) byDate[e.displayDate] = []; byDate[e.displayDate].push(e); });
-
-    let h = '<div class="calendar-grid">';
-    DAYS.forEach((d,i) => h += `<div class="cal-header" style="${i===0?'color:#c0594e':i===6?'color:#5a82c0':''}">${d}</div>`);
-    
-    for (let i = 0; i < firstDay; i++) h += '<div class="cal-day empty"></div>';
-    
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dt = new Date(curYear, curMonth, d);
-      const ds = toDateStr(dt);
-      const dow = dt.getDay();
-      const isPast = dt < td;
-      const isToday = ds === tStr;
-      const list = byDate[ds] || [];
-      
-      let cls = 'cal-day';
-      if (isPast) cls += ' past';
-      else if (isToday) cls += ' today';
-      else if (list.length > 0) cls += ' has-entry';
-      
-      const numColor = dow===0 ? 'color:#c0594e' : dow===6 ? 'color:#5a82c0' : '';
-      const clickable = !isPast ? `onclick="openSheet('${ds}')"` : '';
-      
-      h += `<div class="${cls}" ${clickable}>`;
-      h += `<div class="day-number" style="${numColor}">${d}</div>`;
-      
-      if (!isPast) {
-        list.slice(0,3).forEach(e => {
-          const chipCls = isAdmin ? 'entry-chip admin-chip' : 'entry-chip';
-          h += `<span class="${chipCls}">${e.name}</span>`;
-        });
-        if (list.length > 3) h += `<span class="entry-chip" style="background:#e2ddd6; color:#6b6560;">+${list.length-3}</span>`;
-      }
-      h += '</div>';
-    }
-    h += '</div>';
-    el.innerHTML = h;
-  }
-
-  /* ── 슬라이드업 바텀 시트 (확대 창) ── */
-  function openSheet(dateStr) {
-    sheetDate = dateStr;
-    editingId = null;
-    showAddForm = false;
-    
-    const dt = parseDate(dateStr);
-    const dow = DAYS[dt.getDay()];
-    const isT = dateStr === todayStr();
-    const labelMain = `${dt.getMonth()+1}월 ${dt.getDate()}일`;
-    const labelSub = isT ? `${dow}요일 · 오늘` : `${dow}요일`;
-    
-    document.getElementById('sheet-date-label').innerHTML = `${labelMain}<span>${labelSub}</span>`;
-    renderSheetBody();
-    
-    document.getElementById('sheet-overlay').classList.add('open');
-    document.getElementById('bottom-sheet').classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeSheet() {
-    document.getElementById('sheet-overlay').classList.remove('open');
-    document.getElementById('bottom-sheet').classList.remove('open');
-    document.body.style.overflow = '';
-    sheetDate = null; editingId = null; showAddForm = false;
-  }
-
-  /* ── 확대창 안에서만 수정/삭제 노출 및 작동 ── */
-  function renderSheetBody() {
-    const el = document.getElementById('sheet-body');
-    if (!sheetDate) return;
-    
-    const list = getEntriesForDate(sheetDate);
-    let h = '';
-    
-    if (list.length === 0 && !isAdmin) {
-      h = '<div class="sheet-empty">이 날 지정된 기도 봉헌 명단이 없습니다.</div>';
-    }
-    
-    list.forEach(e => {
-      const time = e.start ? (e.end ? `${e.start} – ${e.end}` : e.start) : '';
-      const rLabel = REPEAT_LABEL[e.repeat] || '';
-      const meta = [time, rLabel, e.memo].filter(Boolean).join(' · ');
-      const isEditing = isAdmin && editingId === e.id;
-      
-      if (isEditing) {
-        h += buildSheetEditForm(e);
-      } else {
-        h += `<div class="sheet-entry${isAdmin?' is-admin':''}">
-          <div class="sheet-entry-top">
-            <div>
-              <div class="sheet-entry-name">${e.name}</div>
-              ${meta ? `<div class="sheet-entry-meta">${meta}</div>` : ''}
-            </div>
-            ${isAdmin ? `<div class="sheet-admin-btns">
-              <button class="btn-se-edit" onclick="startEdit('${e.id}')">수정</button>
-              <button class="btn-se-del" onclick="deleteEntry('${e.id}')">삭제</button>
-            </div>` : ''}
-          </div>
-        </div>`;
-      }
-    });
-    
-    if (isAdmin) {
-      if (showAddForm) {
-        h += buildSheetAddForm();
-      } else {
-        h += `<button class="sheet-add-btn" onclick="toggleAddForm()">+ 이 날에 새 봉헌자 추가</button>`;
-      }
-    }
-    el.innerHTML = h;
-  }
-
-  function buildSheetEditForm(e) {
-    return `<div class="sheet-edit-form">
-      <h4>✎ 명단 수정</h4>
-      <div class="form-grid">
-        <div class="form-group"><label>단체 / 이름</label><input type="text" id="ef-name" value="${e.name}"></div>
-        <div class="form-group"><label>반복 주기</label>
-          <select id="ef-repeat">
-            <option value="none"${e.repeat==='none'?' selected':''}>없음</option>
-            <option value="daily"${e.repeat==='daily'?' selected':''}>매일</option>
-            <option value="weekly"${e.repeat==='weekly'?' selected':''}>매주 같은 요일</option>
-            <option value="monthly"${e.repeat==='monthly'?' selected':''}>매월 같은 날짜</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-grid three">
-        <div class="form-group"><label>시작시간</label><input type="time" id="ef-start" value="${e.start||''}"></div>
-        <div class="form-group"><label>종료시간</label><input type="time" id="ef-end" value="${e.end||''}"></div>
-        <div class="form-group"><label>메모</label><input type="text" id="ef-memo" value="${e.memo||''}"></div>
-      </div>
-      <div class="form-actions">
-        <button class="btn-submit" onclick="saveEdit('${e.id}')">저장</button>
-        <button class="btn-cancel-form" onclick="cancelEdit()">취소</button>
-      </div>
-    </div>`;
-  }
-
-  function buildSheetAddForm() {
-    return `<div class="sheet-add-form">
-      <h4>+ 새 봉헌 등록</h4>
-      <div class="form-grid">
-        <div class="form-group"><label>단체 / 이름</label><input type="text" id="af-name" placeholder="예: 레지오 단원"></div>
-        <div class="form-group"><label>반복 주기</label>
-          <select id="af-repeat">
-            <option value="none">없음</option>
-            <option value="daily">매일</option>
-            <option value="weekly">매주 같은 요일</option>
-            <option value="monthly">매월 같은 날짜</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-grid three">
-        <div class="form-group"><label>시작시간</label><input type="time" id="af-start" value="09:00"></div>
-        <div class="form-group"><label>종료시간</label><input type="time" id="af-end" value="10:00"></div>
-        <div class="form-group"><label>메모</label><input type="text" id="af-memo" placeholder="비고"></div>
-      </div>
-      <div class="form-actions">
-        <button class="btn-submit" onclick="addEntry()">등록</button>
-        <button class="btn-cancel-form" onclick="toggleAddForm()">취소</button>
-      </div>
-    </div>`;
-  }
-
-  function toggleAddForm() { showAddForm = !showAddForm; editingId = null; renderSheetBody(); }
-  function startEdit(id) { editingId = id; showAddForm = false; renderSheetBody(); }
-  function cancelEdit() { editingId = null; renderSheetBody(); }
-
-  /* ── 제어 및 실시간 저장 (C.R.U.D) ── */
-  async function addEntry() {
-    const name = document.getElementById('af-name').value.trim();
-    if (!name) { alert('이름이나 단체를 입력하세요.'); return; }
-    
-    entries.push({
-      id: Date.now().toString(),
-      date: sheetDate,
-      name,
-      start: document.getElementById('af-start').value,
-      end: document.getElementById('af-end').value,
-      repeat: document.getElementById('af-repeat').value,
-      memo: document.getElementById('af-memo').value.trim()
-    });
-    
-    const ok = await saveData();
-    if (!ok) { entries.pop(); return; }
-    showAddForm = false;
-    renderSheetBody();
-    renderCalendar();
-  }
-
-  async function saveEdit(id) {
-    const name = document.getElementById('ef-name').value.trim();
-    if (!name) { alert('이름을 입력해 주세요.'); return; }
-    
-    const idx = entries.findIndex(e => e.id === id);
-    if (idx === -1) return;
-    
-    entries[idx] = {
-      ...entries[idx],
-      name,
-      start: document.getElementById('ef-start').value,
-      end: document.getElementById('ef-end').value,
-      repeat: document.getElementById('ef-repeat').value,
-      memo: document.getElementById('ef-memo').value.trim()
-    };
-    
-    const ok = await saveData();
-    if (!ok) return;
-    editingId = null;
-    renderSheetBody();
-    renderCalendar();
-  }
-
-  async function deleteEntry(id) {
-    if (!confirm('선택하신 봉헌 명단을 시간표에서 삭제할까요?')) return;
-    const origin = [...entries];
-    entries = entries.filter(e => e.id !== id);
-    
-    const ok = await saveData();
-    if (!ok) { entries = origin; return; }
-    renderSheetBody();
-    renderCalendar();
-  }
-
-  /* ── 관리자 모드 활성화 ── */
-  function toggleAdmin() {
-    if (isAdmin) { logout(); return; }
-    const pw = prompt('비밀번호를 입력하세요.', '');
-    if (pw === null) return;
-    if (pw === ADMIN_PW) {
-      isAdmin = true;
-      document.getElementById('admin-bar').classList.add('visible');
-      document.getElementById('btn-admin-toggle').classList.add('active');
-      document.getElementById('btn-admin-toggle').textContent = '관리자 모드 중';
-      render();
-      if (sheetDate) renderSheetBody();
+window.onscroll = function() {
+  const topBtn = document.getElementById("btn-top");
+  if (topBtn) {
+    if (document.body.scrollTop > 150 || document.documentElement.scrollTop > 150) {
+      topBtn.style.display = "flex";
     } else {
-      alert('비밀번호가 올바르지 않습니다.');
+      topBtn.style.display = "none";
     }
   }
+};
 
-  function logout() {
-    isAdmin = false; editingId = null; showAddForm = false;
-    document.getElementById('admin-bar').classList.remove('visible');
-    document.getElementById('btn-admin-toggle').classList.remove('active');
-    document.getElementById('btn-admin-toggle').textContent = '관리자';
-    closeSheet();
+function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+async function fetchEntries() {
+  if(!SCRIPT_WEB_APP_URL || SCRIPT_WEB_APP_URL.includes('YOUR_APPS_SCRIPT')) {
+    entries = JSON.parse(localStorage.getItem('rosary_local_backup') || '[]');
+    render();
+    return;
+  }
+  try {
+    const response = await fetch(SCRIPT_WEB_APP_URL);
+    const data = await response.json();
+    if (Array.isArray(data)) {
+      entries = data;
+      localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
+      render();
+    }
+  } catch (error) {
+    console.warn("로컬 백업 사용:", error);
+    entries = JSON.parse(localStorage.getItem('rosary_local_backup') || '[]');
     render();
   }
+}
 
-  /* ── 달력 네비게이션 ── */
-  function render() {
-    document.getElementById('month-label').textContent = `${curYear}년 ${curMonth+1}월`;
-    renderCalendar();
+function setView(v) {
+  view = v;
+  document.getElementById('tab-calendar').classList.toggle('active', v === 'calendar');
+  document.getElementById('tab-list').classList.toggle('active', v === 'list');
+  document.getElementById('view-calendar').style.display = v === 'calendar' ? 'block' : 'none';
+  document.getElementById('view-list').style.display = v === 'list' ? 'block' : 'none';
+  render();
+}
+
+function renderCalendar() {
+  const el = document.getElementById('view-calendar');
+  if (!el) return;
+  const firstDay = new Date(curYear, curMonth, 1).getDay();
+  const daysInMonth = new Date(curYear, curMonth+1, 0).getDate();
+  const td = todayDate();
+  const todayStr = toDateStr(td);
+
+  const byDate = {};
+  entries.forEach(e => { if(e.date) { if(!byDate[e.date]) byDate[e.date] = []; byDate[e.date].push(e.name); } });
+
+  let h = '<div class="calendar-grid">';
+  DAYS.forEach((d,i) => h += `<div class="cal-header" style="${i===0?'color:#c0594e':i===6?'color:#5a82c0':''}">${d}</div>`);
+  for (let i = 0; i < firstDay; i++) h += '<div class="cal-day empty"></div>';
+  
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dt = new Date(curYear, curMonth, d);
+    const ds = toDateStr(dt);
+    const isPast = dt < td;
+    const isToday = ds === todayStr;
+    const names = byDate[ds] || [];
+    
+    let cls = 'cal-day';
+    if (isPast) cls += ' past';
+    else if (isToday) cls += ' today';
+    const numColor = dt.getDay()===0 ? 'color:#c0594e' : dt.getDay()===6 ? 'color:#5a82c0' : '';
+    
+    h += `<div class="${cls}" onclick="openDetailModal('${ds}', ${isPast})">
+            <div class="day-number" style="${numColor}">${d}</div>
+            <div class="chips-container">`;
+    if (!isPast) {
+      names.forEach(name => { h += `<div class="entry-chip-simple">${name}</div>`; });
+    }
+    h += `</div></div>`;
   }
-  function prevMonth() { curMonth--; if (curMonth < 0) { curMonth=11; curYear--; } render(); }
-  function nextMonth() { curMonth++; if (curMonth > 11) { curMonth=0; curYear++; } render(); }
+  h += '</div>';
+  el.innerHTML = h;
+}
 
-  /* ── 초기화 ── */
-  const now = new Date();
-  curYear = now.getFullYear();
-  curMonth = now.getMonth();
+function renderList() {
+  const el = document.getElementById('view-list');
+  if (!el) return;
+  const td = todayDate();
+  
+  const filtered = entries.filter(e => {
+    if(!e.date) return false;
+    const dt = new Date(e.date.split('-')[0], e.date.split('-')[1]-1, e.date.split('-')[2]);
+    return e.date.startsWith(`${curYear}-${String(curMonth+1).padStart(2,'0')}`) && dt >= td;
+  });
+  
+  filtered.sort((a,b) => a.date.localeCompare(b.date));
 
-  if (scriptUrl && !scriptUrl.includes('여기에')) {
-    loadData();
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="date-section" style="text-align:center; padding:3rem 0; color:var(--text-muted);">이번 달에 예정된 기도 봉헌이 없습니다.</div>';
+    return;
+  }
+
+  let h = '';
+  let lastDate = '';
+  filtered.forEach(e => {
+    if (e.date !== lastDate) {
+      const [y, m, d] = e.date.split('-').map(Number);
+      const dt = new Date(y, m-1, d);
+      h += `${lastDate ? '</div>' : ''}<div class="date-section">
+              <div class="date-header">${m}월 ${d}일 ${DAYS[dt.getDay()]}요일</div>`;
+      lastDate = e.date;
+    }
+    h += `<div class="list-item">
+            <div class="item-main">
+              <div class="item-dot"></div>
+              <span class="item-name">${e.name}</span>
+            </div>
+          </div>`;
+  });
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+function openDetailModal(dateStr, isPast) {
+  if (isPast) return;
+  selectedDateStr = dateStr;
+  const [y, m, d] = dateStr.split('-');
+  document.getElementById('detail-modal-label').textContent = `${parseInt(m)}월 ${parseInt(d)}일 봉헌 현황`;
+  
+  const listEl = document.getElementById('detail-modal-list');
+  listEl.innerHTML = "";
+  
+  const dayEntries = entries.filter(e => e.date === dateStr);
+  if (dayEntries.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:1rem 0; font-size:14px;">등록된 봉헌 명단이 없습니다.</div>';
   } else {
-    render();
+    dayEntries.forEach(e => {
+      listEl.innerHTML += `
+        <div class="expanded-item">
+          <span class="expanded-name">${e.name}</span>
+        </div>`;
+    });
   }
+  document.getElementById('detail-modal').style.display = 'flex';
+}
 
-  // 보기 모드일 때 3분 간격 자동 동기화 갱신
-  setInterval(() => { if (!isAdmin && scriptUrl) loadData(); }, 3 * 60 * 1000);
+function closeDetailModal() { document.getElementById('detail-modal').style.display = 'none'; }
+
+function render() {
+  const label = document.getElementById('month-label');
+  if(label) label.textContent = `${curYear}년 ${MONTHS[curMonth]}`;
+  if (view === 'calendar') renderCalendar(); else renderList();
+}
+
+function prevMonth() { curMonth--; if (curMonth < 0) { curMonth = 11; curYear--; } render(); }
+function nextMonth() { curMonth++; if (curMonth > 11) { curMonth = 0; curYear++; } render(); }
+
+const now = new Date();
+curYear = now.getFullYear();
+curMonth = now.getMonth();
+
+fetchEntries();
 </script>
 </body>
 </html>
