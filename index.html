@@ -121,7 +121,7 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 8px;
-    min-height: 85px;
+    min-height: 90px;
     padding: 6px 4px;
     cursor: pointer;
     display: flex;
@@ -140,40 +140,23 @@
   .chips-container {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
     margin-top: 4px;
     flex-grow: 1;
     justify-content: flex-start;
   }
-  .entry-chip {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  .entry-chip-simple {
     background: var(--success-bg);
     color: var(--success-text);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 500;
-    border-radius: 4px;
-    padding: 2px 4px;
-    min-height: 20px;
-  }
-  .chip-text {
+    border-radius: 3px;
+    padding: 1px 3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    flex-grow: 1;
-    text-align: left;
+    text-align: center;
   }
-  .chip-del {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    font-size: 10px;
-    padding: 0 2px;
-    margin-left: 2px;
-  }
-  .chip-del:hover { color: #c0504e; }
 
   /* List View Styling */
   .list-wrapper { display: none; padding: 0 0.5rem; }
@@ -211,17 +194,20 @@
     padding: 1px 5px;
     margin-left: 6px;
   }
-  .btn-delete {
+  .item-actions-group { display: flex; gap: 4px; }
+  .btn-action-text {
     background: none;
     border: none;
     cursor: pointer;
-    color: var(--text-muted);
-    font-size: 14px;
-    padding: 2px 6px;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: inherit;
   }
-  .btn-delete:hover { color: #c0504e; }
+  .btn-action-text.mod { color: var(--accent); background: var(--accent-light); }
+  .btn-action-text.del { color: #c0504e; background: #fde8e8; }
 
-  /* Simple Prompt Modal */
+  /* Modals (Popups) */
   .modal {
     display: none;
     position: fixed;
@@ -237,13 +223,13 @@
     padding: 1.5rem;
     border-radius: 12px;
     width: 100%;
-    max-width: 320px;
+    max-width: 340px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
   }
-  .modal h3 { font-family: 'Noto Serif KR', serif; font-size: 16px; margin-bottom: 10px; color: var(--accent); }
+  .modal h3 { font-family: 'Noto Serif KR', serif; font-size: 16px; margin-bottom: 12px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
   .modal input {
     width: 100%;
-    padding: 8px 12px;
+    padding: 10px 12px;
     border: 1px solid var(--border);
     border-radius: 6px;
     font-size: 14px;
@@ -252,9 +238,42 @@
   }
   .modal input:focus { border-color: var(--accent-mid); }
   .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
-  .modal button { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; }
+  .modal button { padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-family: inherit; }
   .btn-modal-save { background: var(--accent); color: white; }
   .btn-modal-cancel { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+
+  /* Expanded View List in Modal */
+  .expanded-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .expanded-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .expanded-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+  .btn-add-new-block {
+    width: 100%;
+    background: var(--accent-light);
+    color: var(--accent);
+    border: 1px dashed var(--accent-mid);
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 10px;
+    text-align: center;
+  }
 
   .site-footer { text-align: center; padding: 2rem 1rem; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); margin-top: 2rem; }
 </style>
@@ -264,7 +283,7 @@
 <header class="site-header">
   <span class="cross-symbol">✝</span>
   <h1 class="site-title">거여동성당 묵주기도 고리기도 봉헌 시간표</h1>
-  <p class="site-subtitle">날짜를 터치하여 이름을 등록하거나 수정하세요</p>
+  <p class="site-subtitle">날짜를 터치하여 봉헌 명단을 확인하거나 등록하세요</p>
 </header>
 
 <main class="container">
@@ -284,13 +303,25 @@
   <div id="view-list" class="list-wrapper"></div>
 </main>
 
+<div class="modal" id="detail-modal">
+  <div class="modal-content">
+    <h3 id="detail-modal-label">0월 0일 봉헌 현황</h3>
+    <div class="expanded-list" id="detail-modal-list">
+      </div>
+    <button class="btn-add-new-block" onclick="switchToInputMode()">+ 새 기도 봉헌 등록하기</button>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" style="width:100%" onclick="closeDetailModal()">닫기</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="input-modal">
   <div class="modal-content">
-    <h3 id="modal-date-label">0월 0일 기도 등록</h3>
+    <h3 id="modal-date-label">기도 등록 및 수정</h3>
     <input type="text" id="modal-name-input" placeholder="이름 또는 단체명 입력">
     <div class="modal-actions">
-      <button class="btn-modal-cancel" onclick="closeModal()">취소</button>
-      <button class="btn-modal-save" onclick="saveModalData()">저장</button>
+      <button class="btn-modal-cancel" onclick="closeInputModal()">취소</button>
+      <button class="btn-modal-save" onclick="saveModalData()">저장하기</button>
     </div>
   </div>
 </div>
@@ -301,8 +332,6 @@
 
 <script>
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRfEtUc9PUs3q117nQ0t1hLEIE3ylcA5Tb5z83UZQp-OgpB1oZWPE-WpwaG0vCNXvlsebArWzQ9nbjz/pub?gid=0&single=true&output=csv';
-
-// 여기에 구글 스크립트 웹앱 주소(URL)를 적용하셨다면 아래에 주소를 채워넣어주세요!
 const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyld0-yQcPJfAnbDrF538rQ6fpx_zz6X-QrmQatkBj2Q6GYifT28swxqe9tzcNcWcfc/exec';
 
 const usePassword = true; 
@@ -315,6 +344,7 @@ let view = 'calendar';
 let curYear, curMonth;
 let entries = []; 
 let selectedDateStr = "";
+let editingOldName = ""; // 수정 시 매칭할 기존 이름 저장용 변수
 
 function toDateStr(d) {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -336,29 +366,24 @@ function parseCSV(text) {
 }
 
 async function fetchEntries() {
-  // 1. 보안 주소 우회용 실시간 타임스탬프 처리 추가
-  const secureUrl = SHEET_CSV_URL + (SHEET_CSV_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
-  
+  entries = JSON.parse(localStorage.getItem('rosary_local_backup') || '[]');
+  render();
+
   try {
+    const secureUrl = SHEET_CSV_URL + (SHEET_CSV_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
     const response = await fetch(secureUrl);
     if (!response.ok) throw new Error('Network response error');
     const text = await response.text();
     const sheetData = parseCSV(text);
     
-    // 2. 구글 시트 데이터를 성공적으로 가져왔다면 정답 데이터로 확정
     if (sheetData && sheetData.length > 0) {
       entries = sheetData;
       localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
       render();
-      return;
     }
   } catch (error) {
-    console.warn("구글 실시간 데이터 로드 대기 중 (로컬 캐시 사용):", error);
+    console.warn("구글 시트 연동 대기 중...", error);
   }
-  
-  // 구글 시트 로드 실패 시에만 백업 데이터 불러오기
-  entries = JSON.parse(localStorage.getItem('rosary_local_backup') || '[]');
-  render();
 }
 
 async function sendToGoogle(data) {
@@ -410,15 +435,12 @@ function renderCalendar() {
     else if (isToday) cls += ' today';
     const numColor = dt.getDay()===0 ? 'color:#c0594e' : dt.getDay()===6 ? 'color:#5a82c0' : '';
     
-    h += `<div class="${cls}" onclick="openRegister('${ds}', ${isPast})">
+    h += `<div class="${cls}" onclick="openDetailModal('${ds}', ${isPast})">
             <div class="day-number" style="${numColor}">${d}</div>
             <div class="chips-container">`;
     if (!isPast) {
       names.forEach(name => {
-        h += `<div class="entry-chip">
-                <span class="chip-text" title="${name}">${name}</span>
-                <button class="chip-del" onclick="deleteData(event, '${ds}', '${name}')">✕</button>
-              </div>`;
+        h += `<div class="entry-chip-simple">${name}</div>`;
       });
     }
     h += `</div></div>`;
@@ -463,48 +485,106 @@ function renderList() {
               <span class="item-name">${e.name}</span>
               ${e.date===todayStr?'<span class="today-badge">오늘</span>':''}
             </div>
-            <button class="btn-delete" onclick="deleteData(event, '${e.date}', '${e.name}')">✕</button>
+            <div class="item-actions-group">
+              <button class="btn-action-text mod" onclick="openInputModal('${e.date}', '${e.name}')">수정</button>
+              <button class="btn-action-text del" onclick="deleteData('${e.date}', '${e.name}')">삭제</button>
+            </div>
           </div>`;
   });
   h += '</div>';
   el.innerHTML = h;
 }
 
-function openRegister(dateStr, isPast) {
+// 1 & 2. 날짜 클릭 시 열리는 대형 확대 모달 팝업창
+function openDetailModal(dateStr, isPast) {
   if (isPast) return;
   selectedDateStr = dateStr;
   const [y, m, d] = dateStr.split('-');
-  document.getElementById('modal-date-label').textContent = `${parseInt(m)}월 ${parseInt(d)}일 기도 등록`;
-  const existing = entries.find(e => e.date === dateStr);
-  document.getElementById('modal-name-input').value = existing ? existing.name : '';
+  document.getElementById('detail-modal-label').textContent = `${parseInt(m)}월 ${parseInt(d)}일 봉헌 현황`;
+  
+  const listEl = document.getElementById('detail-modal-list');
+  listEl.innerHTML = "";
+  
+  const dayEntries = entries.filter(e => e.date === dateStr);
+  
+  if (dayEntries.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:1rem 0; font-size:14px;">등록된 봉헌 명단이 없습니다.</div>';
+  } else {
+    dayEntries.forEach(e => {
+      listEl.innerHTML += `
+        <div class="expanded-item">
+          <span class="expanded-name">${e.name}</span>
+          <div class="item-actions-group">
+            <button class="btn-action-text mod" onclick="openInputModal('${dateStr}', '${e.name}')">수정</button>
+            <button class="btn-action-text del" onclick="deleteData('${dateStr}', '${e.name}')">삭제</button>
+          </div>
+        </div>`;
+    });
+  }
+  
+  document.getElementById('detail-modal').style.display = 'flex';
+}
+
+function closeDetailModal() {
+  document.getElementById('detail-modal').style.display = 'none';
+}
+
+function switchToInputMode() {
+  closeDetailModal();
+  openInputModal(selectedDateStr, "");
+}
+
+// 등록 및 수정을 전담하는 범용 입력 모달창
+function openInputModal(dateStr, oldName = "") {
+  closeDetailModal(); // 혹시 열려있을 상세창 닫기
+  selectedDateStr = dateStr;
+  editingOldName = oldName; // 이름이 넘어오면 수정 모드, 없으면 신규등록 모드
+  
+  const [y, m, d] = dateStr.split('-');
+  const titleText = oldName ? `${parseInt(m)}월 ${parseInt(d)}일 명단 수정` : `${parseInt(m)}월 ${parseInt(d)}일 새 봉헌 등록`;
+  document.getElementById('modal-date-label').textContent = titleText;
+  document.getElementById('modal-name-input').value = oldName;
+  
   document.getElementById('input-modal').style.display = 'flex';
   document.getElementById('modal-name-input').focus();
 }
 
-function closeModal() { document.getElementById('input-modal').style.display = 'none'; }
+function closeInputModal() {
+  document.getElementById('input-modal').style.display = 'none';
+  editingOldName = "";
+}
 
 async function saveModalData() {
-  const name = document.getElementById('modal-name-input').value.trim();
-  if (!name) { alert('이름을 입력해 Eshy.'); return; }
+  const newName = document.getElementById('modal-name-input').value.trim();
+  if (!newName) { alert('이름을 입력해 주세요.'); return; }
+  
   if (usePassword) {
     const pw = prompt("수정 비밀번호를 입력하세요:");
     if (pw !== PASSWORD_VALUE) { alert("비밀번호가 틀렸습니다."); return; }
   }
-  
-  await sendToGoogle({ action: "insert", date: selectedDateStr, name: name });
 
-  entries = entries.filter(e => e.date !== selectedDateStr);
-  entries.push({ date: selectedDateStr, name: name });
+  // 수정 모드인 경우기존 구글 시트 데이터 삭제 요청 먼저 전송
+  if (editingOldName) {
+    await sendToGoogle({ action: "delete", date: selectedDateStr, name: editingOldName });
+    entries = entries.filter(e => !(e.date === selectedDateStr && e.name === editingOldName));
+  } else {
+    // 신규 등록일 때 기존 날짜 명단 덮어쓰기 방지 처리 (여러 명 등록 가능하도록 설정 변경)
+    // 원본처럼 하루에 한 명만 남기려면 이 줄을 활성화하세요: entries = entries.filter(e => e.date !== selectedDateStr);
+  }
+  
+  // 구글 시트로 새 데이터 전송
+  await sendToGoogle({ action: "insert", date: selectedDateStr, name: newName });
+  entries.push({ date: selectedDateStr, name: newName });
+  
   localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
   
   alert('저장되었습니다. 구글 시트 반영까지 3~5분이 걸릴 수 있습니다.');
-  closeModal();
+  closeInputModal();
   render();
   setTimeout(fetchEntries, 2000);
 }
 
-async function deleteData(event, dateStr, name) {
-  event.stopPropagation(); 
+async function deleteData(dateStr, name) {
   if (!confirm(`${name} 님의 기도를 삭제할까요?`)) return;
   if (usePassword) {
     const pw = prompt("수정 비밀번호를 입력하세요:");
@@ -512,9 +592,11 @@ async function deleteData(event, dateStr, name) {
   }
   
   await sendToGoogle({ action: "delete", date: dateStr, name: name });
-
   entries = entries.filter(e => !(e.date === dateStr && e.name === name));
   localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
+  
+  alert('삭제되었습니다.');
+  closeDetailModal();
   render();
   setTimeout(fetchEntries, 2000);
 }
