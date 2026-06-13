@@ -249,6 +249,7 @@
     margin-bottom: 15px;
     outline: none;
   }
+  .modal input:focus { border-color: var(--accent-mid); }
   .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
   .modal button { padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-family: inherit; }
   .btn-modal-save { background: var(--accent); color: white; }
@@ -366,8 +367,8 @@
 </footer>
 
 <script>
-// ⚠️ 여기에 구글 Apps Script 웹앱 URL 주소 딱 하나만 넣어주세요!
-const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyvqWxPbI3qrhSIHMBCZ5FaszIn3tdqMCrNqa-ttNQzJZhbjHAi16dY4u16NU93-WBb/exec';
+// 여기에 주소
+const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyHNLRJiFHHwMXvexl-MZCR2Y-6aFYBUmf62XWidLseeoT--VaX5gFQd5Z5uB0Zbpk/exec';
 const PASSWORD_VALUE = "1004";
 
 const DAYS = ['일','월','화','수','목','금','토'];
@@ -378,7 +379,7 @@ let curYear, curMonth;
 let entries = []; 
 let selectedDateStr = "";
 let editingOldName = "";
-let isAdminMode = false; // 최초 접속 시 보기 모드로 보안 제어
+let isAdminMode = false;
 
 function toDateStr(d) {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -402,7 +403,6 @@ function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// 상단 모드 전환 스위치 핵심 로직
 function toggleAdminMode() {
   if (!isAdminMode) {
     const pw = prompt("관리자 비밀번호를 입력하세요:");
@@ -534,9 +534,8 @@ function renderList() {
     if (e.date !== lastDate) {
       const [y, m, d] = e.date.split('-').map(Number);
       const dt = new Date(y, m-1, d);
-      const isT = e.date === todayStr;
       h += `${lastDate ? '</div>' : ''}<div class="date-section">
-              <div class="date-header ${isT?'is-today':''}">${m}월 ${d}일 ${DAYS[dt.getDay()]}요일</div>`;
+              <div class="date-header">${m}월 ${d}일 ${DAYS[dt.getDay()]}요일</div>`;
       lastDate = e.date;
     }
     
