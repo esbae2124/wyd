@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>묵주기도 봉헌 시간표</title>
+<title>거여동성당 묵주기도 고리기도 봉헌 시간표</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap');
 
@@ -219,7 +219,7 @@
 
 <header class="site-header">
   <span class="cross-symbol">✝</span>
-  <h1 class="site-title">묵주기도 봉헌 시간표</h1>
+  <h1 class="site-title">거여동성당 묵주기도 고리기도 봉헌 시간표</h1>
   <p class="site-subtitle">날짜를 터치하여 이름을 등록하거나 수정하세요</p>
 </header>
 
@@ -251,11 +251,10 @@
 </footer>
 
 <script>
-// ⚠️ 여기에 구글 시트 웹에 게시(CSV) 주소를 넣어주세요!
-const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRfEtUc9PUs3q117nQ0t1hLEIE3ylcA5Tb5z83UZQp-OgpB1oZWPE-WpwaG0vCNXvlsebArWzQ9nbjz/pub?gid=0&single=true&output=csv
-';
+// 구글 시트 웹에 게시(CSV) 주소 (오타 교정 완료)
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRfEtUc9PUs3q117nQ0t1hLEIE3ylcA5Tb5z83UZQp-OgpB1oZWPE-WpwaG0vCNXvlsebArWzQ9nbjz/pub?gid=0&single=true&output=csv';
 
-// 공용 보안 비밀번호를 사용하고 싶다면 true로 바꾸고 아래 암호를 수정하세요
+// 비밀번호 활성화 여부 및 암호 설정
 const usePassword = true; 
 const PASSWORD_VALUE = "1004";
 
@@ -286,19 +285,21 @@ function parseCSV(text) {
 }
 
 async function fetchEntries() {
-  if (SHEET_CSV_URL.includes('YOUR_GOOGLE_SHEET')) {
-    // 주소 입력 전 테스트용 더미 데이터 생성 (로컬스토리지 이용)
-    entries = JSON.parse(localStorage.getItem('rosary_local_backup') || '[]');
-    render();
-    return;
-  }
+  // 우선 로컬 저장 데이터로 달력을 무조건 그려줌 (화면 튕김 방지)
+  entries = JSON.parse(localStorage.getItem('rosary_local_backup') || '[]');
+  render();
+
+  // 구글 시트에서 실시간 최신 정보 긁어오기
   try {
     const response = await fetch(SHEET_CSV_URL + '?t=' + new Date().getTime());
     const text = await response.text();
-    entries = parseCSV(text);
-    render();
+    const sheetData = parseCSV(text);
+    if(sheetData.length > 0) {
+      entries = sheetData;
+      render();
+    }
   } catch (error) {
-    console.error(error);
+    console.error("구글 시트 연동 대기 중...", error);
   }
 }
 
@@ -355,7 +356,6 @@ function openRegister(dateStr, isPast) {
   const [y, m, d] = dateStr.split('-');
   document.getElementById('modal-date-label').textContent = `${parseInt(m)}월 ${parseInt(d)}일 기도 봉헌`;
   
-  // 기존에 이름이 등록되어 있다면 인풋창에 미리 띄워줌
   const existing = entries.find(e => e.date === dateStr);
   document.getElementById('modal-name-input').value = existing ? existing.name : '';
   
@@ -376,24 +376,18 @@ function saveModalData() {
     if (pw !== PASSWORD_VALUE) { alert("비밀번호가 틀렸습니다."); return; }
   }
 
-  // 1. 기존 동일 날짜 데이터가 있다면 삭제 (수정 효과)
   entries = entries.filter(e => e.date !== selectedDateStr);
-  
-  // 2. 새 데이터 삽입
   entries.push({ date: selectedDateStr, name: name });
   
-  // 3. 구글 시트 미연동 상태(테스트용)일 때 로컬 백업 유지
   localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
   
   alert('저장되었습니다.');
   closeModal();
   render();
-  
-  // ⚠️ [실제 구글 시트 연동 시 활용] 이곳에 구글 시트로 데이터를 전송하는 코드를 넣을 수 있습니다.
 }
 
 function deleteData(event, dateStr, name) {
-  event.stopPropagation(); // 칸 터치 이벤트 발동 방지
+  event.stopPropagation(); 
   if (!confirm(`${name} 님의 기도를 삭제할까요?`)) return;
 
   if (usePassword) {
