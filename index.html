@@ -65,6 +65,7 @@
     justify-content: space-between;
     margin-bottom: 1rem;
     padding: 0 0.5rem;
+    gap: 8px;
   }
   .month-nav { display: flex; align-items: center; gap: 10px; }
   .month-label {
@@ -87,11 +88,32 @@
     justify-content: center;
   }
 
+  /* 우측 상단 모드 및 탭 그룹 관리 */
+  .right-controls { display: flex; align-items: center; gap: 6px; }
+  
+  .btn-mode-toggle {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+  }
+  .btn-mode-toggle.admin-active {
+    background: #c0504e;
+    color: white;
+    border-color: #a0403e;
+  }
+
   .view-tabs { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
   .tab {
     background: var(--surface);
     border: none;
-    padding: 5px 14px;
+    padding: 5px 12px;
     font-size: 13px;
     cursor: pointer;
     color: var(--text-secondary);
@@ -236,7 +258,7 @@
 <header class="site-header">
   <span class="cross-symbol">✝</span>
   <h1 class="site-title">거여동성당 묵주기도 고리기도 봉헌 시간표</h1>
-  <p class="site-subtitle">날짜를 터치하여 봉헌 명단을 확인하거나 등록하세요</p>
+  <p class="site-subtitle">날짜를 터치하여 봉헌 명단을 확인하세요</p>
 </header>
 
 <main class="container">
@@ -246,9 +268,12 @@
       <span class="month-label" id="month-label"></span>
       <button class="btn-nav" onclick="nextMonth()">&#8250;</button>
     </div>
-    <div class="view-tabs">
-      <button class="tab active" id="tab-calendar" onclick="setView('calendar')">달력</button>
-      <button class="tab" id="tab-list" onclick="setView('list')">목록</button>
+    <div class="right-controls">
+      <button class="btn-mode-toggle" id="btn-mode" onclick="toggleAdminMode()">🔒 보기 모드</button>
+      <div class="view-tabs">
+        <button class="tab active" id="tab-calendar" onclick="setView('calendar')">달력</button>
+        <button class="tab" id="tab-list" onclick="setView('list')">목록</button>
+      </div>
     </div>
   </div>
 
@@ -260,7 +285,7 @@
   <div class="modal-content">
     <h3 id="detail-modal-label">0월 0일 봉헌 현황</h3>
     <div class="expanded-list" id="detail-modal-list"></div>
-    <button class="btn-add-new-block" onclick="switchToInputMode()">+ 새 기도 봉헌 등록하기</button>
+    <button class="btn-add-new-block" id="btn-modal-add" style="display:none;" onclick="switchToInputMode()">+ 새 기도 봉헌 등록하기</button>
     <div class="modal-actions">
       <button class="btn-modal-cancel" style="width:100%" onclick="closeDetailModal()">닫기</button>
     </div>
@@ -285,17 +310,16 @@
 </footer>
 
 <script>
-// ⚠️ 여기에 새로 복사한 구글 앱스 스크립트 웹 앱 주소를 꼭 작은따옴표 사이에 넣어주세요!
+// ⚠️ 여기에 구글 앱스 스크립트 웹 앱 URL 주소를 넣어주세요!
 const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyHNLRJiFHHwMXvexl-MZCR2Y-6aFYBUmf62XWidLseeoT--VaX5gFQd5Z5uB0Zbpk/exec';
-
-const DAYS = ['일','월','화','수','목','금','토'];
-const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+const PASSWORD_VALUE = "1004";
 
 let view = 'calendar';
 let curYear, curMonth;
 let entries = []; 
 let selectedDateStr = "";
 let editingOldName = "";
+let isAdminMode = false; // 기본 보안 상태: 일반 보기 모드
 
 function toDateStr(d) {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -317,7 +341,30 @@ window.onscroll = function() {
 
 function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
-// 구글 시트에서 가로세로 원본 데이터를 그대로 로드해오는 로직
+// 상단 모드 변경 버튼 제어 함수
+function toggleAdminMode() {
+  if (!isAdminMode) {
+    const pw = prompt("관리자 비밀번호를 입력하세요:");
+    if (pw === PASSWORD_VALUE) {
+      isAdminMode = true;
+      const btn = document.getElementById('btn-mode');
+      btn.textContent = "🔓 관리자 모드";
+      btn.classList.add('admin-active');
+      alert("관리자 권한이 인증되었습니다. 수정·삭제 기능이 활성화됩니다.");
+      render();
+    } else {
+      alert("비밀번호가 일치하지 않습니다.");
+    }
+  } else {
+    // 이미 관리자 모드인 경우 클릭 시 다시 일반 보기 모드로 잠금
+    isAdminMode = false;
+    const btn = document.getElementById('btn-mode');
+    btn.textContent = "🔒 보기 모드";
+    btn.classList.remove('admin-active');
+    render();
+  }
+}
+
 async function fetchEntries() {
   if(!SCRIPT_WEB_APP_URL || SCRIPT_WEB_APP_URL.includes('YOUR_APPS_SCRIPT')) {
     entries = JSON.parse(localStorage.getItem('rosary_row_backup') || '[]');
@@ -333,7 +380,7 @@ async function fetchEntries() {
       render();
     }
   } catch (error) { 
-    console.warn("실시간 연동 대기 중...", error); 
+    console.warn("데이터 로딩 실패 (백업본 대체):", error); 
     entries = JSON.parse(localStorage.getItem('rosary_row_backup') || '[]');
     render();
   }
@@ -423,20 +470,27 @@ function renderList() {
     if (e.date !== lastDate) {
       const [y, m, d] = e.date.split('-').map(Number);
       const dt = new Date(y, m-1, d);
-      const isT = e.date === todayStr;
       h += `${lastDate ? '</div>' : ''}<div class="date-section">
-              <div class="date-header ${isT?'is-today':''}">${m}월 ${d}일 ${DAYS[dt.getDay()]}요일</div>`;
+              <div class="date-header">${m}월 ${d}일 ${DAYS[dt.getDay()]}요일</div>`;
       lastDate = e.date;
     }
+    
+    // 관리자 모드 유무에 따라 버튼 노출 조건부 제어
+    let actionsHtml = "";
+    if (isAdminMode) {
+      actionsHtml = `
+        <div class="item-actions-group">
+          <button class="btn-action-text mod" onclick="openInputModal('${e.date}', '${e.name}')">수정</button>
+          <button class="btn-action-text del" onclick="deleteData('${e.date}', '${e.name}')">삭제</button>
+        </div>`;
+    }
+
     h += `<div class="list-item">
             <div class="item-main">
               <div class="item-dot"></div>
               <span class="item-name">${e.name}</span>
             </div>
-            <div class="item-actions-group">
-              <button class="btn-action-text mod" onclick="openInputModal('${e.date}', '${e.name}')">수정</button>
-              <button class="btn-action-text del" onclick="deleteData('${e.date}', '${e.name}')">삭제</button>
-            </div>
+            ${actionsHtml}
           </div>`;
   });
   h += '</div>';
@@ -457,16 +511,25 @@ function openDetailModal(dateStr, isPast) {
     listEl.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:1rem 0; font-size:14px;">등록된 봉헌 명단이 없습니다.</div>';
   } else {
     dayEntries.forEach(e => {
-      listEl.innerHTML += `
-        <div class="expanded-item">
-          <span class="expanded-name">${e.name}</span>
+      // 관리자 모드일 때만 팝업창 명단 옆에 수정/삭제 단추가 보이도록 구현
+      let actionButtons = "";
+      if (isAdminMode) {
+        actionButtons = `
           <div class="item-actions-group">
             <button class="btn-action-text mod" onclick="openInputModal('${dateStr}', '${e.name}')">수정</button>
             <button class="btn-action-text del" onclick="deleteData('${dateStr}', '${e.name}')">삭제</button>
-          </div>
+          </div>`;
+      }
+      listEl.innerHTML += `
+        <div class="expanded-item">
+          <span class="expanded-name">${e.name}</span>
+          ${actionButtons}
         </div>`;
     });
   }
+  
+  // 관리자일 때만 새 기도 등록 단추를 노출시킴
+  document.getElementById('btn-modal-add').style.display = isAdminMode ? 'block' : 'none';
   document.getElementById('detail-modal').style.display = 'flex';
 }
 
@@ -491,21 +554,17 @@ async function saveModalData() {
   const newName = document.getElementById('modal-name-input').value.trim();
   if (!newName) { alert('이름을 입력해 주세요.'); return; }
   
-  // 기존 데이터 수정 시 시트에서 구 데이터 먼저 삭제 요청
   if (editingOldName) {
     await sendToGoogle({ action: "delete", date: selectedDateStr, name: editingOldName });
     entries = entries.filter(e => !(e.date === selectedDateStr && e.name === editingOldName));
   }
   
-  // 시트에 한 행 추가 요청
   await sendToGoogle({ action: "insert", date: selectedDateStr, name: newName });
   entries.push({ date: selectedDateStr, name: newName });
   
   localStorage.setItem('rosary_row_backup', JSON.stringify(entries));
   closeInputModal();
   render();
-  
-  // 1.5초 후 구글 데이터와 강제 싱크 동기화
   setTimeout(fetchEntries, 1500);
 }
 
