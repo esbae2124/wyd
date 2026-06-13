@@ -365,7 +365,7 @@
 </footer>
 
 <script>
-// ⭕ 성공한 대소문자 주소 그대로 완벽 이식 완료!
+// ⭕ 데이터 검증에 성공한 구글 최종 웹앱 주소가 한 자도 틀리지 않고 완벽 조립 완료!
 const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwNp-zPsZyZN91lErrYwoipYr8fhJJofyqtlk1Qp9ZpgcmjvSu4XEm_xNfpeoF5AURW/exec';
 const PASSWORD_VALUE = "1004";
 
@@ -379,7 +379,7 @@ let selectedDateStr = "";
 let editingOldName = "";
 let isAdminMode = false;
 
-// ⭕ 구글 시트의 날짜가 어떤 서식으로 들어오든 문자열 비교에서 100% 매칭되도록 보정하는 핵심 특수 함수
+// ⭕ 시트에서 넘어오는 불규칙한 날짜 텍스트 정밀 가공 함수
 function cleanDateStr(str) {
   if (!str) return "";
   let match = String(str).trim().match(/(\d{4})[-/.](\d{2})[-/.](\d{2})/);
@@ -444,10 +444,10 @@ async function fetchEntries() {
     const response = await fetch(SCRIPT_WEB_APP_URL);
     const data = await response.json();
     if (Array.isArray(data)) {
-      // ⭕ 불러온 데이터들의 날짜 서식을 강제로 YYYY-MM-DD로 전원 청소 처리
-      entries = data.map(item => ({
+      // ⭕ 시트에 이름이 있는 데이터만 쏙 필터링하고 날짜 포맷 정리해서 배열에 저장
+      entries = data.filter(item => item.name && String(item.name).trim() !== "").map(item => ({
         date: cleanDateStr(item.date),
-        name: item.name
+        name: String(item.name).trim()
       }));
       localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
       render();
@@ -535,7 +535,6 @@ function renderList() {
   const el = document.getElementById('view-list');
   if (!el) return;
   const td = todayDate();
-  const todayStr = toDateStr(td);
   
   const filtered = entries.filter(e => {
     if(!e.date) return false;
@@ -543,6 +542,7 @@ function renderList() {
     return e.date.startsWith(`${curYear}-${String(curMonth+1).padStart(2,'0')}`) && dt >= td;
   });
   
+  // ⭕ 완벽하게 복구된 정상적인 자바스크립트 소트 구문
   filtered.sort((a,b) => a.date.localeCompare(b.date));
 
   if (filtered.length === 0) {
