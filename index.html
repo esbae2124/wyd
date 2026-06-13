@@ -372,7 +372,7 @@ function saveModalData() {
   if (!name) { alert('이름을 입력해 주세요.'); return; }
   
   if (usePassword) {
-    const pw = prompt("경당 비밀번호를 입력하세요:");
+    const pw = prompt("수정 비밀번호를 입력하세요:");
     if (pw !== PASSWORD_VALUE) { alert("비밀번호가 틀렸습니다."); return; }
   }
 
@@ -391,7 +391,7 @@ function deleteData(event, dateStr, name) {
   if (!confirm(`${name} 님의 기도를 삭제할까요?`)) return;
 
   if (usePassword) {
-    const pw = prompt("경당 비밀번호를 입력하세요:");
+    const pw = prompt("수정 비밀번호를 입력하세요:");
     if (pw !== PASSWORD_VALUE) { alert("비밀번호가 틀렸습니다."); return; }
   }
 
