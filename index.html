@@ -135,6 +135,81 @@
   .tab:first-child { border-right: 1px solid var(--border); }
   .tab.active { background: var(--accent); color: #fff; }
 
+  .btn-register {
+    background: var(--accent);
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #fff;
+    font-family: 'Noto Sans KR', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: opacity 0.15s;
+  }
+  .btn-register:hover { opacity: 0.85; }
+
+  /* Register form */
+  .register-form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: none;
+  }
+  .register-form h3 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 14px;
+    letter-spacing: 0.03em;
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.04em; }
+  .form-group input,
+  .form-group select {
+    font-size: 13px;
+    font-family: 'Noto Sans KR', sans-serif;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+    background: var(--bg);
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-group input:focus,
+  .form-group select:focus { border-color: var(--accent-mid); background: #fff; }
+  .form-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .btn-submit {
+    background: var(--accent);
+    border: none;
+    border-radius: 6px;
+    padding: 7px 18px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #fff;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-cancel {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .btn-cancel:hover { background: var(--bg); }
+
   /* Calendar */
   .calendar-grid {
     display: grid;
@@ -226,22 +301,23 @@
     flex-shrink: 0;
     letter-spacing: 0.03em;
   }
-
-  /* Empty state */
-  .empty-state {
-    text-align: center;
-    padding: 3rem 1rem;
+  .btn-delete {
+    background: none;
+    border: none;
+    cursor: pointer;
     color: var(--text-muted);
     font-size: 14px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
   }
-  .empty-icon { font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.4; }
+  .btn-delete:hover { background: #fde8e8; color: #c0504e; }
 
-  /* Loading state */
-  .loading-state {
-    text-align: center;
-    padding: 3rem 1rem;
-    color: var(--text-secondary);
-  }
+  /* Empty/Loading state */
+  .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); font-size: 14px; }
+  .empty-icon { font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.4; }
+  .loading-state { text-align: center; padding: 3rem 1rem; color: var(--text-secondary); }
 
   /* Footer */
   .site-footer {
@@ -255,6 +331,8 @@
   }
 
   @media (max-width: 560px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid.three { grid-template-columns: 1fr 1fr; }
     .cal-day { min-height: 56px; }
     .site-title { font-size: 19px; }
   }
@@ -282,6 +360,54 @@
         <button class="tab active" onclick="setView('calendar', this)" role="tab">달력</button>
         <button class="tab" onclick="setView('list', this)" role="tab">목록</button>
       </div>
+      <button class="btn-register" onclick="toggleForm()">+ 등록</button>
+    </div>
+  </div>
+
+  <div class="register-form" id="register-form">
+    <h3>기도 봉헌 등록</h3>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>날짜</label>
+        <input type="date" id="inp-date">
+      </div>
+      <div class="form-group">
+        <label>단체 / 이름</label>
+        <input type="text" id="inp-name" placeholder="예: 레지오 1단">
+      </div>
+    </div>
+    <div class="form-grid three">
+      <div class="form-group">
+        <label>시작 시간</label>
+        <input type="time" id="inp-start" value="09:00">
+      </div>
+      <div class="form-group">
+        <label>종료 시간</label>
+        <input type="time" id="inp-end" value="10:00">
+      </div>
+      <div class="form-group">
+        <label>반복</label>
+        <select id="inp-repeat">
+          <option value="none">없음</option>
+          <option value="daily">매일</option>
+          <option value="weekly">매주 같은 요일</option>
+          <option value="monthly">매월 같은 날짜</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>메모 (선택)</label>
+        <input type="text" id="inp-memo" placeholder="예: 10단 묵주기도">
+      </div>
+      <div class="form-group">
+        <label style="color: #c0504e; font-weight: bold;">경당 비밀번호</label>
+        <input type="password" id="inp-password" placeholder="비밀번호 입력">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-submit" id="btn-submit" onclick="addEntry()">등록하기</button>
+      <button class="btn-cancel" onclick="toggleForm()">취소</button>
     </div>
   </div>
 
@@ -297,8 +423,10 @@
 </footer>
 
 <script>
-// ⚠️ 여기에 구글 시트에서 복사한 CSV 주소를 꼭 넣어주세요!
-const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRfEtUc9PUs3q117nQ0t1hLEIE3ylcA5Tb5z83UZQp-OgpB1oZWPE-WpwaG0vCNXvlsebArWzQ9nbjz/pub?gid=0&single=true&output=csv';
+// ⚠️ 1. 구글 시트 웹에 게시(CSV) 주소를 입력하세요.
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRfEtUc9PUs3q117nQ0t1hLEIE3ylcA5Tb5z83UZQp-OgpB1oZWPE-WpwaG0vCNXvlsebArWzQ9nbjz/pub?gid=0&single=true&output=csvL';
+// ⚠️ 2. 구글 Apps Script 새  배포 후 나온 웹 앱 주소를 입력하세요.
+const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzjyenCLCRYM-2U6pK3M5uqhKkGZG2D6qcU-00IcpqnrF36QS-3tblkv_gpuEVEu1dI/exec';
 
 const DAYS = ['일','월','화','수','목','금','토'];
 const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
@@ -320,19 +448,14 @@ function todayDate() {
   const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate());
 }
 
-// 구글 시트 CSV 파싱 함수
 function parseCSV(text) {
   const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
   if (lines.length <= 1) return [];
-  
   const headers = lines[0].split(',').map(h => h.replace(/["']/g, '').trim());
-  
   return lines.slice(1).map((line, idx) => {
     const columns = line.split(',').map(c => c.replace(/["']/g, '').trim());
     const row = {};
-    headers.forEach((header, i) => {
-      row[header] = columns[i] || '';
-    });
+    headers.forEach((header, i) => { row[header] = columns[i] || ''; });
     return {
       id: String(idx),
       date: row.date || '',
@@ -345,16 +468,15 @@ function parseCSV(text) {
   });
 }
 
-// 실시간 데이터 패치
 async function fetchEntries() {
   try {
-    const response = await fetch(SHEET_CSV_URL);
+    const response = await fetch(SHEET_CSV_URL + '?t=' + new Date().getTime()); // 캐시 방지
     const text = await response.text();
     entries = parseCSV(text);
     render();
   } catch (error) {
-    console.error('데이터를 불러오는데 실패했습니다:', error);
-    document.getElementById('view-calendar').innerHTML = '<div class="empty-state">일정을 불러올 수 없습니다. 주소를 확인해 주세요.</div>';
+    console.error(error);
+    document.getElementById('view-calendar').innerHTML = '<div class="empty-state">데이터를 가져올 수 없습니다.</div>';
   }
 }
 
@@ -416,7 +538,7 @@ function renderCalendar() {
     const numColor = dow===0 ? 'color:#c0594e' : dow===6 ? 'color:#5a82c0' : '';
     h += `<div class="${cls}"><div class="day-number" style="${numColor}">${d}</div>`;
     if (!isPast) {
-      entries_today.slice(0,2).forEach(e => h += `<span class="entry-chip">${e.name}</span>`);
+      entries_today.slice(0,2).forEach(e => h += `<span class="entry-chip" title="${e.name}">${e.name}</span>`);
       if (entries_today.length > 2) h += `<span class="entry-chip">+${entries_today.length-2}</span>`;
     }
     h += '</div>';
@@ -429,7 +551,6 @@ function renderList() {
   const el = document.getElementById('view-list');
   const td = todayDate();
   const todayStr = toDateStr(td);
-
   const all = [];
   const rangeEnd = new Date(curYear, curMonth+1, 0);
   const rangeStart = new Date(curYear, curMonth, 1);
@@ -470,9 +591,7 @@ function renderList() {
       const dt = parseDate(e.displayDate);
       const dow = DAYS[dt.getDay()];
       const isT = e.displayDate === todayStr;
-      const label = isT
-        ? `오늘 · ${dt.getMonth()+1}월 ${dt.getDate()}일 ${dow}요일`
-        : `${dt.getMonth()+1}월 ${dt.getDate()}일 ${dow}요일`;
+      const label = isT ? `오늘 · ${dt.getMonth()+1}월 ${dt.getDate()}일 ${dow}요일` : `${dt.getMonth()+1}월 ${dt.getDate()}일 ${dow}요일`;
       h += `<div class="date-section"><div class="date-header${isT?' is-today':''}">${label}</div>`;
       lastDate = e.displayDate;
     }
@@ -487,6 +606,7 @@ function renderList() {
         ${meta ? `<div class="item-meta">${meta}</div>` : ''}
       </div>
       ${isT ? '<span class="today-badge">오늘</span>' : ''}
+      <button class="btn-delete" onclick="deleteEntry('${e.date}', '${e.name}', '${e.start}')" aria-label="삭제" title="삭제">✕</button>
     </div>`;
   });
   if (lastDate) h += '</div>';
@@ -510,11 +630,81 @@ function setView(v, btn) {
 function prevMonth() { curMonth--; if (curMonth < 0) { curMonth = 11; curYear--; } render(); }
 function nextMonth() { curMonth++; if (curMonth > 11) { curMonth = 0; curYear++; } render(); }
 
+function toggleForm() {
+  const f = document.getElementById('register-form');
+  f.style.display = f.style.display === 'none' || !f.style.display ? 'block' : 'none';
+}
+
+// 구글로 데이터 전송 요청 함수
+async function sendToGoogle(data) {
+  const response = await fetch(SCRIPT_WEB_APP_URL, {
+    method: 'POST',
+    mode: 'no-cors', // 구글 응답 보안 처리
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  return { result: "success" }; // no-cors 특성상 항상 성공으로 처리 후 새로고침 유도
+}
+
+async function addEntry() {
+  const date = document.getElementById('inp-date').value;
+  const name = document.getElementById('inp-name').value.trim();
+  const password = document.getElementById('inp-password').value;
+  
+  if (!date || !name || !password) { alert('날짜, 이름, 비밀번호를 모두 입력해 주세요.'); return; }
+  
+  const submitBtn = document.getElementById('btn-submit');
+  submitBtn.disabled = true;
+  submitBtn.textContent = '등록 중...';
+
+  const payload = {
+    action: "insert",
+    password,
+    date,
+    name,
+    start: document.getElementById('inp-start').value,
+    end: document.getElementById('inp-end').value,
+    repeat: document.getElementById('inp-repeat').value,
+    memo: document.getElementById('inp-memo').value.trim()
+  };
+
+  try {
+    await sendToGoogle(payload);
+    alert('기도 등록 요청을 보냈습니다. (비밀번호가 틀리면 반영되지 않습니다.)');
+    toggleForm();
+    // 폼 초기화
+    document.getElementById('inp-name').value = '';
+    document.getElementById('inp-memo').value = '';
+    document.getElementById('inp-password').value = '';
+    
+    // 약간의 딜레이 후 실시간 새로고침
+    setTimeout(fetchEntries, 2500);
+  } catch (e) {
+    alert('등록에 실패했습니다.');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = '등록하기';
+  }
+}
+
+async function deleteEntry(date, name, start) {
+  const password = prompt('이 일정을 삭제하려면 경당 비밀번호를 입력하세요:');
+  if (!password) return;
+
+  try {
+    await sendToGoogle({ action: "delete", password, date, name, start });
+    alert('삭제 요청을 보냈습니다. (비밀번호가 틀리면 반영되지 않습니다.)');
+    setTimeout(fetchEntries, 2500);
+  } catch (e) {
+    alert('삭제 처리에 실패했습니다.');
+  }
+}
+
 const now = new Date();
 curYear = now.getFullYear();
 curMonth = now.getMonth();
+document.getElementById('inp-date').min = toDateStr(todayDate());
 
-// 시작할 때 구글 시트에서 데이터 가져오기
 fetchEntries();
 </script>
 </body>
