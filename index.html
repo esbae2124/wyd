@@ -302,7 +302,7 @@
 <script>
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRfEtUc9PUs3q117nQ0t1hLEIE3ylcA5Tb5z83UZQp-OgpB1oZWPE-WpwaG0vCNXvlsebArWzQ9nbjz/pub?gid=0&single=true&output=csv';
 
-// ⚠️여기에 방금 구글에서 복사한 웹 앱 URL 주소를 넣어주세요!
+// 여기에 구글 스크립트 웹앱 주소(URL)를 적용하셨다면 아래에 주소를 채워넣어주세요!
 const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyld0-yQcPJfAnbDrF538rQ6fpx_zz6X-QrmQatkBj2Q6GYifT28swxqe9tzcNcWcfc/exec';
 
 const usePassword = true; 
@@ -336,24 +336,33 @@ function parseCSV(text) {
 }
 
 async function fetchEntries() {
-  entries = JSON.parse(localStorage.getItem('rosary_local_backup') || '[]');
-  render();
-
+  // 1. 보안 주소 우회용 실시간 타임스탬프 처리 추가
+  const secureUrl = SHEET_CSV_URL + (SHEET_CSV_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+  
   try {
-    const response = await fetch(SHEET_CSV_URL + '?t=' + new Date().getTime());
+    const response = await fetch(secureUrl);
+    if (!response.ok) throw new Error('Network response error');
     const text = await response.text();
     const sheetData = parseCSV(text);
-    if(sheetData.length > 0) {
+    
+    // 2. 구글 시트 데이터를 성공적으로 가져왔다면 정답 데이터로 확정
+    if (sheetData && sheetData.length > 0) {
       entries = sheetData;
+      localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
       render();
+      return;
     }
   } catch (error) {
-    console.error(error);
+    console.warn("구글 실시간 데이터 로드 대기 중 (로컬 캐시 사용):", error);
   }
+  
+  // 구글 시트 로드 실패 시에만 백업 데이터 불러오기
+  entries = JSON.parse(localStorage.getItem('rosary_local_backup') || '[]');
+  render();
 }
 
 async function sendToGoogle(data) {
-  if(!SCRIPT_WEB_APP_URL.includes('YOUR_APPS_SCRIPT')) {
+  if(SCRIPT_WEB_APP_URL && !SCRIPT_WEB_APP_URL.includes('YOUR_APPS_SCRIPT')) {
     try {
       await fetch(SCRIPT_WEB_APP_URL, {
         method: 'POST',
@@ -376,6 +385,7 @@ function setView(v) {
 
 function renderCalendar() {
   const el = document.getElementById('view-calendar');
+  if (!el) return;
   const firstDay = new Date(curYear, curMonth, 1).getDay();
   const daysInMonth = new Date(curYear, curMonth+1, 0).getDate();
   const td = todayDate();
@@ -419,6 +429,7 @@ function renderCalendar() {
 
 function renderList() {
   const el = document.getElementById('view-list');
+  if (!el) return;
   const td = todayDate();
   const todayStr = toDateStr(td);
   
@@ -474,23 +485,22 @@ function closeModal() { document.getElementById('input-modal').style.display = '
 
 async function saveModalData() {
   const name = document.getElementById('modal-name-input').value.trim();
-  if (!name) { alert('이름을 입력해 주세요.'); return; }
+  if (!name) { alert('이름을 입력해 Eshy.'); return; }
   if (usePassword) {
     const pw = prompt("수정 비밀번호를 입력하세요:");
     if (pw !== PASSWORD_VALUE) { alert("비밀번호가 틀렸습니다."); return; }
   }
   
-  // 구글 시트로 보내기
   await sendToGoogle({ action: "insert", date: selectedDateStr, name: name });
 
   entries = entries.filter(e => e.date !== selectedDateStr);
   entries.push({ date: selectedDateStr, name: name });
   localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
   
-  alert('저장되었습니다. 구글 시트에 반영되기까지 최대 3~5분이 걸릴 수 있습니다.');
+  alert('저장되었습니다. 구글 시트 반영까지 3~5분이 걸릴 수 있습니다.');
   closeModal();
   render();
-  setTimeout(fetchEntries, 3000);
+  setTimeout(fetchEntries, 2000);
 }
 
 async function deleteData(event, dateStr, name) {
@@ -501,17 +511,17 @@ async function deleteData(event, dateStr, name) {
     if (pw !== PASSWORD_VALUE) { alert("비밀번호가 틀렸습니다."); return; }
   }
   
-  // 구글 시트에서 지우기 요청
   await sendToGoogle({ action: "delete", date: dateStr, name: name });
 
   entries = entries.filter(e => !(e.date === dateStr && e.name === name));
   localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
   render();
-  setTimeout(fetchEntries, 3000);
+  setTimeout(fetchEntries, 2000);
 }
 
 function render() {
-  document.getElementById('month-label').textContent = `${curYear}년 ${MONTHS[curMonth]}`;
+  const label = document.getElementById('month-label');
+  if(label) label.textContent = `${curYear}년 ${MONTHS[curMonth]}`;
   if (view === 'calendar') renderCalendar(); else renderList();
 }
 
