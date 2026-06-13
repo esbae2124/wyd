@@ -59,12 +59,14 @@
 
   .container { max-width: 640px; margin: 0 auto; padding: 1rem 0.5rem 3rem; }
 
+  /* Toolbar */
   .toolbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 1rem;
     padding: 0 0.5rem;
+    gap: 8px;
   }
   .month-nav { display: flex; align-items: center; gap: 10px; }
   .month-label {
@@ -87,6 +89,27 @@
     justify-content: center;
   }
 
+  /* 우측 상단 모드 스위치 및 탭 버튼 그룹 */
+  .right-controls { display: flex; align-items: center; gap: 6px; }
+  
+  .btn-mode-toggle {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+  }
+  .btn-mode-toggle.admin-active {
+    background: #c0504e;
+    color: white;
+    border-color: #a0403e;
+  }
+
   .view-tabs { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
   .tab {
     background: var(--surface);
@@ -95,10 +118,12 @@
     font-size: 13px;
     cursor: pointer;
     color: var(--text-secondary);
+    font-family: 'Noto Sans KR', sans-serif;
   }
   .tab:first-child { border-right: 1px solid var(--border); }
   .tab.active { background: var(--accent); color: #fff; }
 
+  /* Calendar Grid */
   .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -123,7 +148,9 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    transition: background 0.1s;
   }
+  .cal-day:hover { background: #fdfcf9; }
   .cal-day.past { background: transparent; border-color: transparent; opacity: 0.4; cursor: default; }
   .cal-day.today { background: var(--today-bg); border: 1.5px solid var(--today-border); }
   .cal-day.empty { background: transparent; border-color: transparent; cursor: default; }
@@ -152,6 +179,7 @@
     text-align: center;
   }
 
+  /* List View Styling */
   .list-wrapper { display: none; padding: 0 0.5rem; }
   .date-section { margin-bottom: 1.25rem; }
   .date-header {
@@ -171,11 +199,26 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
   }
   .item-main { display: flex; align-items: center; gap: 10px; }
   .item-dot { width: 6px; height: 6px; background: var(--success-border); border-radius: 50%; }
   .item-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+  
+  .item-actions-group { display: flex; gap: 4px; }
+  .btn-action-text {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: inherit;
+  }
+  .btn-action-text.mod { color: var(--accent); background: var(--accent-light); }
+  .btn-action-text.del { color: #c0504e; background: #fde8e8; }
 
+  /* Modals (Popups) */
   .modal {
     display: none;
     position: fixed;
@@ -195,15 +238,73 @@
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
   }
   .modal h3 { font-family: 'Noto Serif KR', serif; font-size: 16px; margin-bottom: 12px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
-  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 15px; }
+  .modal input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 15px;
+    outline: none;
+  }
+  .modal input:focus { border-color: var(--accent-mid); }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
   .modal button { padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-family: inherit; }
-  .btn-modal-cancel { background: var(--accent); color: white; }
+  .btn-modal-save { background: var(--accent); color: white; }
+  .btn-modal-cancel { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
 
-  .expanded-list { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
-  .expanded-item { display: flex; align-items: center; background: var(--bg); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); }
+  /* Expanded View List in Modal */
+  .expanded-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .expanded-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
   .expanded-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+  .btn-add-new-block {
+    width: 100%;
+    background: var(--accent-light);
+    color: var(--accent);
+    border: 1px dashed var(--accent-mid);
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 10px;
+    text-align: center;
+  }
 
-  .btn-scroll-top { position: fixed; bottom: 25px; right: 25px; width: 44px; height: 44px; background: var(--accent); color: #ffffff; border: none; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; z-index: 999; }
+  .btn-scroll-top {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 44px;
+    height: 44px;
+    background: var(--accent);
+    color: #ffffff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: bold;
+    z-index: 999;
+  }
+
   .site-footer { text-align: center; padding: 2rem 1rem; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); margin-top: 2rem; }
 </style>
 </head>
@@ -222,9 +323,12 @@
       <span class="month-label" id="month-label"></span>
       <button class="btn-nav" onclick="nextMonth()">&#8250;</button>
     </div>
-    <div class="view-tabs">
-      <button class="tab active" id="tab-calendar" onclick="setView('calendar')">달력</button>
-      <button class="tab" id="tab-list" onclick="setView('list')">목록</button>
+    <div class="right-controls">
+      <button class="btn-mode-toggle" id="btn-mode" onclick="toggleAdminMode()">🔒 보기 모드</button>
+      <div class="view-tabs">
+        <button class="tab active" id="tab-calendar" onclick="setView('calendar')">달력</button>
+        <button class="tab" id="tab-list" onclick="setView('list')">목록</button>
+      </div>
     </div>
   </div>
 
@@ -236,8 +340,20 @@
   <div class="modal-content">
     <h3 id="detail-modal-label">0월 0일 봉헌 현황</h3>
     <div class="expanded-list" id="detail-modal-list"></div>
+    <button class="btn-add-new-block" id="btn-modal-add" style="display:none;" onclick="switchToInputMode()">+ 새 기도 봉헌 등록하기</button>
     <div class="modal-actions">
       <button class="btn-modal-cancel" style="width:100%" onclick="closeDetailModal()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="input-modal">
+  <div class="modal-content">
+    <h3 id="modal-date-label">기도 등록 및 수정</h3>
+    <input type="text" id="modal-name-input" placeholder="이름 또는 단체명 입력" onkeydown="handleInputKeyDown(event)">
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeInputModal()">취소</button>
+      <button class="btn-modal-save" onclick="saveModalData()">저장하기</button>
     </div>
   </div>
 </div>
@@ -249,8 +365,9 @@
 </footer>
 
 <script>
-// ⚠️ 여기에 새로 배포하여 딴 구글 웹앱 URL 주소를 매칭해 주세요!
-const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwymz_glZn7zD22nGD3YmatV-F8YGYF6w3UnXwUNSZ2U9Djc7kcdLrx9FYu_tsBn7Qm/exec';
+// ⚠️ 여기에 수정한 구글 최종 웹앱 주소
+const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyAXJKQ9a1_ehZaGo1FvUgZXpep_n_da0KCN2wFRKog4VecCrMD0owU6Qzz24Ryj_dC/exec';
+const PASSWORD_VALUE = "1004";
 
 const DAYS = ['일','월','화','수','목','금','토'];
 const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
@@ -258,6 +375,9 @@ const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','
 let view = 'calendar';
 let curYear, curMonth;
 let entries = []; 
+let selectedDateStr = "";
+let editingOldName = "";
+let isAdminMode = false;
 
 function toDateStr(d) {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -277,7 +397,31 @@ window.onscroll = function() {
   }
 };
 
-function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleAdminMode() {
+  if (!isAdminMode) {
+    const pw = prompt("관리자 비밀번호를 입력하세요:");
+    if (pw === PASSWORD_VALUE) {
+      isAdminMode = true;
+      const btn = document.getElementById('btn-mode');
+      btn.textContent = "🔓 관리자 모드";
+      btn.classList.add('admin-active');
+      alert("관리자 권한이 인증되었습니다. 편집 기능이 활성화됩니다.");
+      render();
+    } else {
+      alert("비밀번호가 일치하지 않습니다.");
+    }
+  } else {
+    isAdminMode = false;
+    const btn = document.getElementById('btn-mode');
+    btn.textContent = "🔒 보기 모드";
+    btn.classList.remove('admin-active');
+    render();
+  }
+}
 
 async function fetchEntries() {
   if(!SCRIPT_WEB_APP_URL || SCRIPT_WEB_APP_URL.includes('YOUR_APPS_SCRIPT')) {
@@ -285,6 +429,7 @@ async function fetchEntries() {
     render();
     return;
   }
+  
   try {
     const response = await fetch(SCRIPT_WEB_APP_URL);
     const data = await response.json();
@@ -294,9 +439,21 @@ async function fetchEntries() {
       render();
     }
   } catch (error) {
-    console.warn("로컬 백업 사용:", error);
+    console.warn("로컬 백업 데이터 로드:", error);
     entries = JSON.parse(localStorage.getItem('rosary_local_backup') || '[]');
     render();
+  }
+}
+
+async function sendToGoogle(data) {
+  if(SCRIPT_WEB_APP_URL && !SCRIPT_WEB_APP_URL.includes('YOUR_APPS_SCRIPT')) {
+    try {
+      await fetch(SCRIPT_WEB_APP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(data)
+      });
+    } catch(e) { console.error(e); }
   }
 }
 
@@ -340,7 +497,9 @@ function renderCalendar() {
             <div class="day-number" style="${numColor}">${d}</div>
             <div class="chips-container">`;
     if (!isPast) {
-      names.forEach(name => { h += `<div class="entry-chip-simple">${name}</div>`; });
+      names.forEach(name => {
+        h += `<div class="entry-chip-simple">${name}</div>`;
+      });
     }
     h += `</div></div>`;
   }
@@ -376,11 +535,22 @@ function renderList() {
               <div class="date-header">${m}월 ${d}일 ${DAYS[dt.getDay()]}요일</div>`;
       lastDate = e.date;
     }
+    
+    let actionsHtml = "";
+    if (isAdminMode) {
+      actionsHtml = `
+        <div class="item-actions-group">
+          <button class="btn-action-text mod" onclick="openInputModal('${e.date}', '${e.name}')">수정</button>
+          <button class="btn-action-text del" onclick="deleteData('${e.date}', '${e.name}')">삭제</button>
+        </div>`;
+    }
+
     h += `<div class="list-item">
             <div class="item-main">
               <div class="item-dot"></div>
               <span class="item-name">${e.name}</span>
             </div>
+            ${actionsHtml}
           </div>`;
   });
   h += '</div>';
@@ -397,20 +567,90 @@ function openDetailModal(dateStr, isPast) {
   listEl.innerHTML = "";
   
   const dayEntries = entries.filter(e => e.date === dateStr);
+  
   if (dayEntries.length === 0) {
     listEl.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:1rem 0; font-size:14px;">등록된 봉헌 명단이 없습니다.</div>';
   } else {
     dayEntries.forEach(e => {
+      let actionButtons = "";
+      if (isAdminMode) {
+        actionButtons = `
+          <div class="item-actions-group">
+            <button class="btn-action-text mod" onclick="openInputModal('${dateStr}', '${e.name}')">수정</button>
+            <button class="btn-action-text del" onclick="deleteData('${dateStr}', '${e.name}')">삭제</button>
+          </div>`;
+      }
       listEl.innerHTML += `
         <div class="expanded-item">
           <span class="expanded-name">${e.name}</span>
+          ${actionButtons}
         </div>`;
     });
   }
+  
+  document.getElementById('btn-modal-add').style.display = isAdminMode ? 'block' : 'none';
   document.getElementById('detail-modal').style.display = 'flex';
 }
 
 function closeDetailModal() { document.getElementById('detail-modal').style.display = 'none'; }
+function switchToInputMode() { closeDetailModal(); openInputModal(selectedDateStr, ""); }
+
+function openInputModal(dateStr, oldName = "") {
+  closeDetailModal();
+  selectedDateStr = dateStr;
+  editingOldName = oldName;
+  
+  const [y, m, d] = dateStr.split('-');
+  const titleText = oldName ? `${parseInt(m)}월 ${parseInt(d)}일 명단 수정` : `${parseInt(m)}월 ${parseInt(d)}일 새 봉헌 등록`;
+  document.getElementById('modal-date-label').textContent = titleText;
+  document.getElementById('modal-name-input').value = oldName;
+  
+  document.getElementById('input-modal').style.display = 'flex';
+  document.getElementById('modal-name-input').focus();
+}
+
+function closeInputModal() {
+  document.getElementById('input-modal').style.display = 'none';
+  editingOldName = "";
+}
+
+function handleInputKeyDown(event) {
+  if (event.key === "Enter") {
+    event.preventDefault(); 
+    saveModalData();
+  }
+}
+
+async function saveModalData() {
+  const newName = document.getElementById('modal-name-input').value.trim();
+  if (!newName) { alert('이름을 입력해 주세요.'); return; }
+
+  if (editingOldName) {
+    await sendToGoogle({ action: "delete", date: selectedDateStr, name: editingOldName });
+    entries = entries.filter(e => !(e.date === selectedDateStr && e.name === editingOldName));
+  }
+  
+  await sendToGoogle({ action: "insert", date: selectedDateStr, name: newName });
+  entries.push({ date: selectedDateStr, name: newName });
+  
+  localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
+  
+  closeInputModal();
+  render();
+  setTimeout(fetchEntries, 1000);
+}
+
+async function deleteData(dateStr, name) {
+  if (!confirm(`${name} 님의 기도를 삭제할까요?`)) return;
+  
+  await sendToGoogle({ action: "delete", date: dateStr, name: name });
+  entries = entries.filter(e => !(e.date === dateStr && e.name === name));
+  localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
+  
+  closeDetailModal();
+  render();
+  setTimeout(fetchEntries, 1000);
+}
 
 function render() {
   const label = document.getElementById('month-label');
