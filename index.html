@@ -302,6 +302,9 @@
 <script>
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRfEtUc9PUs3q117nQ0t1hLEIE3ylcA5Tb5z83UZQp-OgpB1oZWPE-WpwaG0vCNXvlsebArWzQ9nbjz/pub?gid=0&single=true&output=csv';
 
+// ⚠️여기에 방금 구글에서 복사한 웹 앱 URL 주소를 넣어주세요!
+const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyld0-yQcPJfAnbDrF538rQ6fpx_zz6X-QrmQatkBj2Q6GYifT28swxqe9tzcNcWcfc/exec';
+
 const usePassword = true; 
 const PASSWORD_VALUE = "1004";
 
@@ -346,6 +349,19 @@ async function fetchEntries() {
     }
   } catch (error) {
     console.error(error);
+  }
+}
+
+async function sendToGoogle(data) {
+  if(!SCRIPT_WEB_APP_URL.includes('YOUR_APPS_SCRIPT')) {
+    try {
+      await fetch(SCRIPT_WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } catch(e) { console.error(e); }
   }
 }
 
@@ -406,7 +422,6 @@ function renderList() {
   const td = todayDate();
   const todayStr = toDateStr(td);
   
-  // 현재 선택된 년/월에 속하고 오늘 이후인 일정만 필터링 및 정렬
   const filtered = entries.filter(e => {
     if(!e.date) return false;
     const dt = new Date(e.date.split('-')[0], e.date.split('-')[1]-1, e.date.split('-')[2]);
@@ -457,31 +472,42 @@ function openRegister(dateStr, isPast) {
 
 function closeModal() { document.getElementById('input-modal').style.display = 'none'; }
 
-function saveModalData() {
+async function saveModalData() {
   const name = document.getElementById('modal-name-input').value.trim();
   if (!name) { alert('이름을 입력해 주세요.'); return; }
   if (usePassword) {
     const pw = prompt("수정 비밀번호를 입력하세요:");
     if (pw !== PASSWORD_VALUE) { alert("비밀번호가 틀렸습니다."); return; }
   }
+  
+  // 구글 시트로 보내기
+  await sendToGoogle({ action: "insert", date: selectedDateStr, name: name });
+
   entries = entries.filter(e => e.date !== selectedDateStr);
   entries.push({ date: selectedDateStr, name: name });
   localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
-  alert('저장되었습니다.');
+  
+  alert('저장되었습니다. 구글 시트에 반영되기까지 최대 3~5분이 걸릴 수 있습니다.');
   closeModal();
   render();
+  setTimeout(fetchEntries, 3000);
 }
 
-function deleteData(event, dateStr, name) {
+async function deleteData(event, dateStr, name) {
   event.stopPropagation(); 
   if (!confirm(`${name} 님의 기도를 삭제할까요?`)) return;
   if (usePassword) {
     const pw = prompt("수정 비밀번호를 입력하세요:");
     if (pw !== PASSWORD_VALUE) { alert("비밀번호가 틀렸습니다."); return; }
   }
+  
+  // 구글 시트에서 지우기 요청
+  await sendToGoogle({ action: "delete", date: dateStr, name: name });
+
   entries = entries.filter(e => !(e.date === dateStr && e.name === name));
   localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
   render();
+  setTimeout(fetchEntries, 3000);
 }
 
 function render() {
