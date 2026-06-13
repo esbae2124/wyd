@@ -310,8 +310,12 @@
 </footer>
 
 <script>
-// ⚠️ 여기에 구글 앱스 스크립트 웹 앱 URL 주소를 넣어주세요!
-const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwlTHQ4X1oyuZh15r7gHkChU-arEAXywxARRdp9oSEY2OFY417gnR7yZ2kDh3r241yc/exec';
+// 달력 렌더링에 필요한 기준 데이터 정의 (누락되었던 에러 해결 핵심!)
+const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+const MONTHS = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+
+// ⚠️ 구글 앱스 스크립트 웹 앱 URL 주소
+const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyHNLRJiFHHwMXvexl-MZCR2Y-6aFYBUmf62XWidLseeoT--VaX5gFQd5Z5uB0Zbpk/exec';
 const PASSWORD_VALUE = "1004";
 
 let view = 'calendar';
@@ -319,7 +323,7 @@ let curYear, curMonth;
 let entries = []; 
 let selectedDateStr = "";
 let editingOldName = "";
-let isAdminMode = false; // 기본 보안 상태: 일반 보기 모드
+let isAdminMode = false;
 
 function toDateStr(d) {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -341,7 +345,6 @@ window.onscroll = function() {
 
 function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
-// 상단 모드 변경 버튼 제어 함수
 function toggleAdminMode() {
   if (!isAdminMode) {
     const pw = prompt("관리자 비밀번호를 입력하세요:");
@@ -356,7 +359,6 @@ function toggleAdminMode() {
       alert("비밀번호가 일치하지 않습니다.");
     }
   } else {
-    // 이미 관리자 모드인 경우 클릭 시 다시 일반 보기 모드로 잠금
     isAdminMode = false;
     const btn = document.getElementById('btn-mode');
     btn.textContent = "🔒 보기 모드";
@@ -475,7 +477,6 @@ function renderList() {
       lastDate = e.date;
     }
     
-    // 관리자 모드 유무에 따라 버튼 노출 조건부 제어
     let actionsHtml = "";
     if (isAdminMode) {
       actionsHtml = `
@@ -511,7 +512,6 @@ function openDetailModal(dateStr, isPast) {
     listEl.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:1rem 0; font-size:14px;">등록된 봉헌 명단이 없습니다.</div>';
   } else {
     dayEntries.forEach(e => {
-      // 관리자 모드일 때만 팝업창 명단 옆에 수정/삭제 단추가 보이도록 구현
       let actionButtons = "";
       if (isAdminMode) {
         actionButtons = `
@@ -528,7 +528,6 @@ function openDetailModal(dateStr, isPast) {
     });
   }
   
-  // 관리자일 때만 새 기도 등록 단추를 노출시킴
   document.getElementById('btn-modal-add').style.display = isAdminMode ? 'block' : 'none';
   document.getElementById('detail-modal').style.display = 'flex';
 }
