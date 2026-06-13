@@ -367,8 +367,8 @@
 </footer>
 
 <script>
-  // ⚠️ 여기에 구글 Apps Script 웹앱 URL 주소 딱 하나만 넣어주세요!
-const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwUTc-_hldk76YMxgnW80IovipMn0tjuELNFLyAlx42PUaHmVUDinuU2Bs7arhZbFhI/exec';
+// ⚠️ 여기에 구글 새 배포 주소를 꼭 치환해서 붙여넣어 주세요!
+const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzUobOsP330ESWDhj7BMHASm2k-kkuWMmrgRPGuunxij4Egvx5d1NOMPuUZbirwDs1w/exec';
 const PASSWORD_VALUE = "1004";
 
 const DAYS = ['일','월','화','수','목','금','토'];
@@ -617,10 +617,9 @@ function closeInputModal() {
   editingOldName = "";
 }
 
-// ⭕ 이름 적고 엔터 치면 저장 프로세스를 자동으로 실행해주는 함수
 function handleInputKeyDown(event) {
   if (event.key === "Enter") {
-    event.preventDefault(); // 기본 한글 엔터 버그 방지
+    event.preventDefault(); 
     saveModalData();
   }
 }
