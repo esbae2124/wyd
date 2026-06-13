@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>묵주기도 봉헌 시간표</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --border: #e2ddd6;
+    --border-strong: #c9c2b6;
+    --text-primary: #1a1814;
+    --text-secondary: #6b6560;
+    --text-muted: #9e9990;
+    --accent: #7a5c3a;
+    --accent-light: #f0e8de;
+    --accent-mid: #c4a882;
+    --today-bg: #f0ebe3;
+    --today-border: #8b6c47;
+    --success-bg: #edf4ee;
+    --success-border: #7aad7e;
+    --success-text: #2d6b32;
+  }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* Header */
+  .site-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 1rem 2rem;
+    text-align: center;
+  }
+  .cross-symbol {
+    display: block;
+    font-size: 28px;
+    color: var(--accent-mid);
+    margin-bottom: 10px;
+    letter-spacing: 0.1em;
+  }
+  .site-title {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+  .site-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+  .divider-ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 16px auto 0;
+    color: var(--accent-mid);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+  }
+  .divider-ornament::before,
+  .divider-ornament::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 0.5px;
+    background: var(--accent-mid);
+  }
+
+  /* Main layout */
+  .container { max-width: 760px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .month-nav { display: flex; align-items: center; gap: 6px; }
+  .month-label {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 16px;
+    font-weight: 600;
+    min-width: 100px;
+    text-align: center;
+    color: var(--text-primary);
+  }
+  .btn-nav {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--text-secondary);
+    transition: background 0.15s;
+  }
+  .btn-nav:hover { background: var(--accent-light); border-color: var(--accent-mid); }
+
+  .toolbar-right { display: flex; gap: 8px; align-items: center; }
+
+  .view-tabs { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .tab {
+    background: var(--surface);
+    border: none;
+    padding: 5px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: background 0.15s, color 0.15s;
+  }
+  .tab:first-child { border-right: 1px solid var(--border); }
+  .tab.active { background: var(--accent); color: #fff; }
+
+  /* Calendar */
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .cal-header {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 5px 0 6px;
+    letter-spacing: 0.03em;
+  }
+  .cal-header:first-child { color: #c0594e; }
+  .cal-header:last-child { color: #5a82c0; }
+  .cal-day {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-height: 72px;
+    padding: 6px;
+    transition: border-color 0.15s;
+    overflow: hidden;
+  }
+  .cal-day.past { background: transparent; border-color: transparent; opacity: 0.4; }
+  .cal-day.today { background: var(--today-bg); border-color: var(--today-border); }
+  .cal-day.has-entry { border-color: var(--success-border); }
+  .cal-day.empty { background: transparent; border-color: transparent; }
+  .day-number { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+  .cal-day.today .day-number { color: var(--accent); font-weight: 500; }
+  .cal-day:first-child .day-number, .sunday .day-number { color: #c0594e; }
+  .cal-day:last-child .day-number, .saturday .day-number { color: #5a82c0; }
+  .entry-chip {
+    display: block;
+    background: var(--success-bg);
+    color: var(--success-text);
+    font-size: 9.5px;
+    border-radius: 4px;
+    padding: 1px 4px;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* List view */
+  .list-wrapper { display: none; }
+  .date-section { margin-bottom: 1.25rem; }
+  .date-header {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    padding: 0 2px 6px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .date-header.is-today { color: var(--accent); border-bottom-color: var(--accent-mid); }
+  .list-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .list-item.is-today { border-color: var(--today-border); background: var(--today-bg); }
+  .item-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--success-bg);
+    border: 2px solid var(--success-border);
+  }
+  .list-item.is-today .item-dot { border-color: var(--accent-mid); background: var(--accent-light); }
+  .item-body { flex: 1; min-width: 0; }
+  .item-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+  .item-meta { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
+  .today-badge {
+    font-size: 10px;
+    background: var(--accent-light);
+    color: var(--accent);
+    border: 1px solid var(--accent-mid);
+    border-radius: 4px;
+    padding: 2px 7px;
+    flex-shrink: 0;
+    letter-spacing: 0.03em;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .empty-icon { font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.4; }
+
+  /* Loading state */
+  .loading-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-secondary);
+  }
+
+  /* Footer */
+  .site-footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    font-size: 12px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    margin-top: 2rem;
+    letter-spacing: 0.03em;
+  }
+
+  @media (max-width: 560px) {
+    .cal-day { min-height: 56px; }
+    .site-title { font-size: 19px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <span class="cross-symbol">✝</span>
+  <h1 class="site-title">묵주기도 봉헌 시간표</h1>
+  <p class="site-subtitle" id="space-label">성모 경당 · 매일 끊임없이 이어지는 기도</p>
+  <div class="divider-ornament">· · ·</div>
+</header>
+
+<main class="container">
+
+  <div class="toolbar">
+    <div class="month-nav">
+      <button class="btn-nav" onclick="prevMonth()" aria-label="이전 달">&#8249;</button>
+      <span class="month-label" id="month-label"></span>
+      <button class="btn-nav" onclick="nextMonth()" aria-label="다음 달">&#8250;</button>
+    </div>
+    <div class="toolbar-right">
+      <div class="view-tabs" role="tablist">
+        <button class="tab active" onclick="setView('calendar', this)" role="tab">달력</button>
+        <button class="tab" onclick="setView('list', this)" role="tab">목록</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-calendar">
+    <div class="loading-state">기도 일정을 불러오는 중입니다...</div>
+  </div>
+  <div class="list-wrapper" id="view-list"></div>
+
+</main>
+
+<footer class="site-footer">
+  지나간 날짜의 기도 봉헌은 자동으로 사라집니다
+</footer>
+
+<script>
+// ⚠️ 여기에 구글 시트에서 복사한 CSV 주소를 꼭 넣어주세요!
+const SHEET_CSV_URL = 'YOUR_GOOGLE_SHEET_CSV_URL';
+
+const DAYS = ['일','월','화','수','목','금','토'];
+const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+const REPEAT_LABEL = { none:'', daily:'매일', weekly:'매주', monthly:'매월' };
+
+let view = 'calendar';
+let curYear, curMonth;
+let entries = [];
+
+function toDateStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function parseDate(s) { 
+  if(!s) return new Date();
+  const [y,m,d] = s.split('-').map(Number); 
+  return new Date(y, m-1, d); 
+}
+function todayDate() {
+  const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+}
+
+// 구글 시트 CSV 파싱 함수
+function parseCSV(text) {
+  const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
+  if (lines.length <= 1) return [];
+  
+  const headers = lines[0].split(',').map(h => h.replace(/["']/g, '').trim());
+  
+  return lines.slice(1).map((line, idx) => {
+    const columns = line.split(',').map(c => c.replace(/["']/g, '').trim());
+    const row = {};
+    headers.forEach((header, i) => {
+      row[header] = columns[i] || '';
+    });
+    return {
+      id: String(idx),
+      date: row.date || '',
+      name: row.name || '',
+      start: row.start || '',
+      end: row.end || '',
+      repeat: row.repeat || 'none',
+      memo: row.memo || ''
+    };
+  });
+}
+
+// 실시간 데이터 패치
+async function fetchEntries() {
+  try {
+    const response = await fetch(SHEET_CSV_URL);
+    const text = await response.text();
+    entries = parseCSV(text);
+    render();
+  } catch (error) {
+    console.error('데이터를 불러오는데 실패했습니다:', error);
+    document.getElementById('view-calendar').innerHTML = '<div class="empty-state">일정을 불러올 수 없습니다. 주소를 확인해 주세요.</div>';
+  }
+}
+
+function getExpanded(year, month) {
+  const start = new Date(year, month, 1);
+  const end = new Date(year, month+1, 0);
+  const td = todayDate();
+  const result = [];
+  const seen = new Set();
+
+  entries.forEach(e => {
+    if (!e.date || !e.name) return;
+    const base = parseDate(e.date);
+    function push(d) {
+      const key = e.id + '|' + toDateStr(d);
+      if (!seen.has(key) && d >= td) { seen.add(key); result.push({ ...e, displayDate: toDateStr(d) }); }
+    }
+    if (e.repeat === 'none' || !e.repeat) {
+      if (base >= td && base >= start && base <= end) push(base);
+    } else if (e.repeat === 'daily') {
+      for (let d = new Date(Math.max(start, td)); d <= end; d = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1)) push(new Date(d));
+    } else if (e.repeat === 'weekly') {
+      const dow = base.getDay();
+      for (let d = new Date(Math.max(start, td)); d <= end; d = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1))
+        if (d.getDay() === dow) push(new Date(d));
+    } else if (e.repeat === 'monthly') {
+      const c = new Date(year, month, base.getDate());
+      if (c >= start && c <= end) push(c);
+    }
+  });
+  return result;
+}
+
+function renderCalendar() {
+  const el = document.getElementById('view-calendar');
+  const firstDay = new Date(curYear, curMonth, 1).getDay();
+  const daysInMonth = new Date(curYear, curMonth+1, 0).getDate();
+  const td = todayDate();
+  const todayStr = toDateStr(td);
+  const exp = getExpanded(curYear, curMonth);
+  const byDate = {};
+  exp.forEach(e => { if (!byDate[e.displayDate]) byDate[e.displayDate] = []; byDate[e.displayDate].push(e); });
+
+  let h = '<div class="calendar-grid">';
+  DAYS.forEach((d,i) => h += `<div class="cal-header" style="${i===0?'color:#c0594e':i===6?'color:#5a82c0':''}">${d}</div>`);
+  for (let i = 0; i < firstDay; i++) h += '<div class="cal-day empty"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dt = new Date(curYear, curMonth, d);
+    const ds = toDateStr(dt);
+    const dow = dt.getDay();
+    const isPast = dt < td;
+    const isToday = ds === todayStr;
+    const entries_today = byDate[ds] || [];
+    const hasEntry = entries_today.length > 0 && !isPast;
+    let cls = 'cal-day';
+    if (isPast) cls += ' past';
+    else if (isToday) cls += ' today';
+    else if (hasEntry) cls += ' has-entry';
+    const numColor = dow===0 ? 'color:#c0594e' : dow===6 ? 'color:#5a82c0' : '';
+    h += `<div class="${cls}"><div class="day-number" style="${numColor}">${d}</div>`;
+    if (!isPast) {
+      entries_today.slice(0,2).forEach(e => h += `<span class="entry-chip">${e.name}</span>`);
+      if (entries_today.length > 2) h += `<span class="entry-chip">+${entries_today.length-2}</span>`;
+    }
+    h += '</div>';
+  }
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+function renderList() {
+  const el = document.getElementById('view-list');
+  const td = todayDate();
+  const todayStr = toDateStr(td);
+
+  const all = [];
+  const rangeEnd = new Date(curYear, curMonth+1, 0);
+  const rangeStart = new Date(curYear, curMonth, 1);
+  const seen = new Set();
+
+  entries.forEach(e => {
+    if (!e.date || !e.name) return;
+    const base = parseDate(e.date);
+    function push(d) {
+      const key = e.id + '|' + toDateStr(d);
+      if (!seen.has(key) && d >= td && d >= rangeStart && d <= rangeEnd) {
+        seen.add(key); all.push({ ...e, displayDate: toDateStr(d) });
+      }
+    }
+    if (e.repeat === 'none' || !e.repeat) { if (base >= td) push(base); }
+    else if (e.repeat === 'daily') {
+      for (let d = new Date(Math.max(rangeStart, td)); d <= rangeEnd; d = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1)) push(new Date(d));
+    } else if (e.repeat === 'weekly') {
+      const dow = base.getDay();
+      for (let d = new Date(Math.max(rangeStart, td)); d <= rangeEnd; d = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1))
+        if (d.getDay() === dow) push(new Date(d));
+    } else if (e.repeat === 'monthly') {
+      push(new Date(curYear, curMonth, base.getDate()));
+    }
+  });
+
+  all.sort((a,b) => a.displayDate.localeCompare(b.displayDate) || (a.start||'').localeCompare(b.start||''));
+
+  if (all.length === 0) {
+    el.innerHTML = '<div class="empty-state"><span class="empty-icon">🕊</span>앞으로 예정된 기도 봉헌이 없습니다.</div>';
+    return;
+  }
+
+  let h = '';
+  let lastDate = '';
+  all.forEach(e => {
+    if (e.displayDate !== lastDate) {
+      const dt = parseDate(e.displayDate);
+      const dow = DAYS[dt.getDay()];
+      const isT = e.displayDate === todayStr;
+      const label = isT
+        ? `오늘 · ${dt.getMonth()+1}월 ${dt.getDate()}일 ${dow}요일`
+        : `${dt.getMonth()+1}월 ${dt.getDate()}일 ${dow}요일`;
+      h += `<div class="date-section"><div class="date-header${isT?' is-today':''}">${label}</div>`;
+      lastDate = e.displayDate;
+    }
+    const isT = e.displayDate === todayStr;
+    const time = e.start ? (e.end ? `${e.start} – ${e.end}` : e.start) : '';
+    const rLabel = REPEAT_LABEL[e.repeat] || '';
+    const meta = [time, rLabel, e.memo].filter(Boolean).join(' · ');
+    h += `<div class="list-item${isT?' is-today':''}">
+      <div class="item-dot"></div>
+      <div class="item-body">
+        <div class="item-name">${e.name}</div>
+        ${meta ? `<div class="item-meta">${meta}</div>` : ''}
+      </div>
+      ${isT ? '<span class="today-badge">오늘</span>' : ''}
+    </div>`;
+  });
+  if (lastDate) h += '</div>';
+  el.innerHTML = h;
+}
+
+function render() {
+  document.getElementById('month-label').textContent = `${curYear}년 ${MONTHS[curMonth]}`;
+  if (view === 'calendar') renderCalendar(); else renderList();
+}
+
+function setView(v, btn) {
+  view = v;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('view-calendar').style.display = v === 'calendar' ? '' : 'none';
+  document.getElementById('view-list').style.display = v === 'list' ? '' : 'none';
+  render();
+}
+
+function prevMonth() { curMonth--; if (curMonth < 0) { curMonth = 11; curYear--; } render(); }
+function nextMonth() { curMonth++; if (curMonth > 11) { curMonth = 0; curYear++; } render(); }
+
+const now = new Date();
+curYear = now.getFullYear();
+curMonth = now.getMonth();
+
+// 시작할 때 구글 시트에서 데이터 가져오기
+fetchEntries();
+</script>
+</body>
+</html>
