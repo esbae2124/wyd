@@ -88,7 +88,21 @@
     justify-content: center;
   }
 
-  /* Calendar */
+  /* View Tabs */
+  .view-tabs { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .tab {
+    background: var(--surface);
+    border: none;
+    padding: 5px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .tab:first-child { border-right: 1px solid var(--border); }
+  .tab.active { background: var(--accent); color: #fff; }
+
+  /* Calendar Grid */
   .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -123,7 +137,6 @@
   .day-number { font-size: 11px; color: var(--text-muted); font-weight: 500; }
   .cal-day.today .day-number { color: var(--accent); font-weight: bold; }
   
-  /* Name Chips */
   .chips-container {
     display: flex;
     flex-direction: column;
@@ -159,10 +172,54 @@
     font-size: 10px;
     padding: 0 2px;
     margin-left: 2px;
-    display: flex;
-    align-items: center;
   }
   .chip-del:hover { color: #c0504e; }
+
+  /* List View Styling */
+  .list-wrapper { display: none; padding: 0 0.5rem; }
+  .date-section { margin-bottom: 1.25rem; }
+  .date-header {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .date-header.is-today { color: var(--accent); border-bottom-color: var(--accent-mid); }
+  .list-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .list-item.is-today { border-color: var(--today-border); background: var(--today-bg); }
+  .item-main { display: flex; align-items: center; gap: 10px; }
+  .item-dot { width: 6px; height: 6px; background: var(--success-border); border-radius: 50%; }
+  .item-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+  .today-badge {
+    font-size: 10px;
+    background: var(--accent-light);
+    color: var(--accent);
+    border: 1px solid var(--accent-mid);
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin-left: 6px;
+  }
+  .btn-delete {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 14px;
+    padding: 2px 6px;
+  }
+  .btn-delete:hover { color: #c0504e; }
 
   /* Simple Prompt Modal */
   .modal {
@@ -195,24 +252,11 @@
   }
   .modal input:focus { border-color: var(--accent-mid); }
   .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
-  .modal button {
-    padding: 6px 16px;
-    border-radius: 6px;
-    font-size: 13px;
-    cursor: pointer;
-    border: none;
-  }
+  .modal button { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; }
   .btn-modal-save { background: var(--accent); color: white; }
   .btn-modal-cancel { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
 
-  .site-footer {
-    text-align: center;
-    padding: 2rem 1rem;
-    font-size: 12px;
-    color: var(--text-muted);
-    border-top: 1px solid var(--border);
-    margin-top: 2rem;
-  }
+  .site-footer { text-align: center; padding: 2rem 1rem; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); margin-top: 2rem; }
 </style>
 </head>
 <body>
@@ -230,9 +274,14 @@
       <span class="month-label" id="month-label"></span>
       <button class="btn-nav" onclick="nextMonth()">&#8250;</button>
     </div>
+    <div class="view-tabs">
+      <button class="tab active" id="tab-calendar" onclick="setView('calendar')">달력</button>
+      <button class="tab" id="tab-list" onclick="setView('list')">목록</button>
+    </div>
   </div>
 
   <div id="view-calendar"></div>
+  <div id="view-list" class="list-wrapper"></div>
 </main>
 
 <div class="modal" id="input-modal">
@@ -251,16 +300,15 @@
 </footer>
 
 <script>
-// 구글 시트 웹에 게시(CSV) 주소 (오타 교정 완료)
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRfEtUc9PUs3q117nQ0t1hLEIE3ylcA5Tb5z83UZQp-OgpB1oZWPE-WpwaG0vCNXvlsebArWzQ9nbjz/pub?gid=0&single=true&output=csv';
 
-// 비밀번호 활성화 여부 및 암호 설정
 const usePassword = true; 
 const PASSWORD_VALUE = "1004";
 
 const DAYS = ['일','월','화','수','목','금','토'];
 const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
+let view = 'calendar';
 let curYear, curMonth;
 let entries = []; 
 let selectedDateStr = "";
@@ -285,11 +333,9 @@ function parseCSV(text) {
 }
 
 async function fetchEntries() {
-  // 우선 로컬 저장 데이터로 달력을 무조건 그려줌 (화면 튕김 방지)
   entries = JSON.parse(localStorage.getItem('rosary_local_backup') || '[]');
   render();
 
-  // 구글 시트에서 실시간 최신 정보 긁어오기
   try {
     const response = await fetch(SHEET_CSV_URL + '?t=' + new Date().getTime());
     const text = await response.text();
@@ -299,8 +345,17 @@ async function fetchEntries() {
       render();
     }
   } catch (error) {
-    console.error("구글 시트 연동 대기 중...", error);
+    console.error(error);
   }
+}
+
+function setView(v) {
+  view = v;
+  document.getElementById('tab-calendar').classList.toggle('active', v === 'calendar');
+  document.getElementById('tab-list').classList.toggle('active', v === 'list');
+  document.getElementById('view-calendar').style.display = v === 'calendar' ? 'block' : 'none';
+  document.getElementById('view-list').style.display = v === 'list' ? 'block' : 'none';
+  render();
 }
 
 function renderCalendar() {
@@ -327,13 +382,11 @@ function renderCalendar() {
     let cls = 'cal-day';
     if (isPast) cls += ' past';
     else if (isToday) cls += ' today';
-
     const numColor = dt.getDay()===0 ? 'color:#c0594e' : dt.getDay()===6 ? 'color:#5a82c0' : '';
     
     h += `<div class="${cls}" onclick="openRegister('${ds}', ${isPast})">
             <div class="day-number" style="${numColor}">${d}</div>
             <div class="chips-container">`;
-            
     if (!isPast) {
       names.forEach(name => {
         h += `<div class="entry-chip">
@@ -342,10 +395,51 @@ function renderCalendar() {
               </div>`;
       });
     }
-    
-    h += `   </div>
-          </div>`;
+    h += `</div></div>`;
   }
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+function renderList() {
+  const el = document.getElementById('view-list');
+  const td = todayDate();
+  const todayStr = toDateStr(td);
+  
+  // 현재 선택된 년/월에 속하고 오늘 이후인 일정만 필터링 및 정렬
+  const filtered = entries.filter(e => {
+    if(!e.date) return false;
+    const dt = new Date(e.date.split('-')[0], e.date.split('-')[1]-1, e.date.split('-')[2]);
+    return e.date.startsWith(`${curYear}-${String(curMonth+1).padStart(2,'0')}`) && dt >= td;
+  });
+  
+  filtered.sort((a,b) => a.date.localeCompare(b.date));
+
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="date-section" style="text-align:center; padding:3rem 0; color:var(--text-muted);">이번 달에 예정된 기도 봉헌이 없습니다.</div>';
+    return;
+  }
+
+  let h = '';
+  let lastDate = '';
+  filtered.forEach(e => {
+    if (e.date !== lastDate) {
+      const [y, m, d] = e.date.split('-').map(Number);
+      const dt = new Date(y, m-1, d);
+      const isT = e.date === todayStr;
+      h += `${lastDate ? '</div>' : ''}<div class="date-section">
+              <div class="date-header ${isT?'is-today':''}">${m}월 ${d}일 ${DAYS[dt.getDay()]}요일 ${isT?'· 오늘':''}</div>`;
+      lastDate = e.date;
+    }
+    h += `<div class="list-item ${e.date===todayStr?'is-today':''}">
+            <div class="item-main">
+              <div class="item-dot"></div>
+              <span class="item-name">${e.name}</span>
+              ${e.date===todayStr?'<span class="today-badge">오늘</span>':''}
+            </div>
+            <button class="btn-delete" onclick="deleteData(event, '${e.date}', '${e.name}')">✕</button>
+          </div>`;
+  });
   h += '</div>';
   el.innerHTML = h;
 }
@@ -354,33 +448,25 @@ function openRegister(dateStr, isPast) {
   if (isPast) return;
   selectedDateStr = dateStr;
   const [y, m, d] = dateStr.split('-');
-  document.getElementById('modal-date-label').textContent = `${parseInt(m)}월 ${parseInt(d)}일 기도 봉헌`;
-  
+  document.getElementById('modal-date-label').textContent = `${parseInt(m)}월 ${parseInt(d)}일 기도 등록`;
   const existing = entries.find(e => e.date === dateStr);
   document.getElementById('modal-name-input').value = existing ? existing.name : '';
-  
   document.getElementById('input-modal').style.display = 'flex';
   document.getElementById('modal-name-input').focus();
 }
 
-function closeModal() {
-  document.getElementById('input-modal').style.display = 'none';
-}
+function closeModal() { document.getElementById('input-modal').style.display = 'none'; }
 
 function saveModalData() {
   const name = document.getElementById('modal-name-input').value.trim();
   if (!name) { alert('이름을 입력해 주세요.'); return; }
-  
   if (usePassword) {
     const pw = prompt("수정 비밀번호를 입력하세요:");
     if (pw !== PASSWORD_VALUE) { alert("비밀번호가 틀렸습니다."); return; }
   }
-
   entries = entries.filter(e => e.date !== selectedDateStr);
   entries.push({ date: selectedDateStr, name: name });
-  
   localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
-  
   alert('저장되었습니다.');
   closeModal();
   render();
@@ -389,12 +475,10 @@ function saveModalData() {
 function deleteData(event, dateStr, name) {
   event.stopPropagation(); 
   if (!confirm(`${name} 님의 기도를 삭제할까요?`)) return;
-
   if (usePassword) {
     const pw = prompt("수정 비밀번호를 입력하세요:");
     if (pw !== PASSWORD_VALUE) { alert("비밀번호가 틀렸습니다."); return; }
   }
-
   entries = entries.filter(e => !(e.date === dateStr && e.name === name));
   localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
   render();
@@ -402,7 +486,7 @@ function deleteData(event, dateStr, name) {
 
 function render() {
   document.getElementById('month-label').textContent = `${curYear}년 ${MONTHS[curMonth]}`;
-  renderCalendar();
+  if (view === 'calendar') renderCalendar(); else renderList();
 }
 
 function prevMonth() { curMonth--; if (curMonth < 0) { curMonth = 11; curYear--; } render(); }
