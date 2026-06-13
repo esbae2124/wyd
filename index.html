@@ -34,6 +34,10 @@
   --danger-light:#fde8e8;
   --success:#2d6b32;
   --success-light:#edf4ee;
+  
+  /* 🎨 지나간 날짜용 음영 처리 색상 추가 */
+  --past-bg:#eae6df;
+  --past-opacity:0.45;
 }
 body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6}
 
@@ -65,15 +69,22 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:2
 .calendar-day-header:nth-child(1){color:var(--danger)}
 .calendar-day-header:nth-child(7){color:#5a82c0}
 
+/* 달력 세포 디자인 */
 .calendar-cell{min-height:90px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:4px}
 .calendar-cell.other-month{background:transparent;border-color:transparent;opacity:0.3;pointer-events:none}
 .calendar-cell.today{background:#f0ebe3;border:1.5px solid #8b6c47}
+
+/* 🔒 [수정] 지나간 날짜 음영 처리용 스타일 */
+.calendar-cell.past{background:var(--past-bg);opacity:var(--past-opacity)}
+
 .calendar-cell .day-num{font-size:11px;font-weight:500;color:var(--text-muted)}
 .calendar-cell:nth-child(7n+1) .day-num{color:var(--danger)}
 .calendar-cell:nth-child(7n) .day-num{color:#5a82c0}
 .calendar-cell.today .day-num{color:var(--accent);font-weight:bold}
 
 .calendar-cell .list-names{width:100%;font-size:10px;color:var(--success);background:var(--success-light);font-weight:500;border-radius:3px;padding:1px 3px;text-align:center;word-break:break-all;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 🔒 지나간 칸 내부의 명단 칩 색상도 차분하게 톤다운 */
+.calendar-cell.past .list-names{color:var(--text-secondary);background:var(--border)}
 
 .list-panel{max-height:calc(100vh - 180px);overflow-y:auto;position:sticky;top:20px}
 .list-body{padding:12px}
@@ -82,15 +93,21 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:2
 .row-item:hover{background:var(--bg)}
 .row-item:last-child{border-bottom:none}
 
+/* 🔒 [수정] 명단 목록 중 지나간 날짜 영역 음영 처리 */
+.row-item.past{background:var(--past-bg);opacity:0.8}
+.row-item.past:hover{background:var(--past-bg)}
+
 .row-date-badge{width:58px;font-size:11px;font-weight:500;color:var(--text-secondary);background:var(--bg);padding:4px 5px;border-radius:6px;text-align:center;flex-shrink:0}
 .row-item.sunday .row-date-badge{background:var(--danger-light);color:var(--danger)}
 .row-item.saturday .row-date-badge{background:#edf3f9;color:#5a82c0}
 
 .name-input{flex:1;padding:6px 10px;font-size:13px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);outline:none;transition:border-color 0.15s}
 .name-input:focus{border-color:var(--accent-mid)}
-.name-input:placeholder-shown{border-style:dashed}
 
-body.is-locked .name-input{background:var(--bg);color:var(--text-secondary);cursor:not-allowed;border-style:solid}
+/* ✍️ [수정] 플레이스홀더 글씨 연회색 지정 및 지나간 인풋 비활성화 디자인 */
+.name-input::placeholder{color:#ccc}
+body.is-locked .name-input{background:var(--surface);color:var(--text-secondary);cursor:not-allowed;border-style:solid}
+body.is-locked .row-item.past .name-input{background:transparent;border-color:transparent}
 
 .site-footer{text-align:center;padding:2rem 1rem;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);margin-top:2rem}
 
@@ -114,7 +131,7 @@ body.is-locked .name-input{background:var(--bg);color:var(--text-secondary);curs
   <div class="toolbar">
     <select class="select-month" id="month-select" onchange="onMonthChange()">
       <option value="2026-05">2026년 5월</option>
-      <option value="2026-06" selected>2026년 6월</option>
+      <option value="2026-06">2026년 6월</option>
       <option value="2026-07">2026년 7월</option>
       <option value="2026-08">2026년 8월</option>
       <option value="2026-09">2026년 9월</option>
@@ -161,13 +178,30 @@ body.is-locked .name-input{background:var(--bg);color:var(--text-secondary);curs
 </footer>
 
 <script>
-  // ⚠️ 여기에 구글 Apps Script 웹앱 URL 주소
 const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxxf2nrMLu5n065fWB8puF0fqPvh0a3Xxjl_BcCpVtcE8K5qmTy2q8esX2aPhk-WFvRKg/exec';
 const PASSWORD_VALUE = "1004"; 
 let isLockedMode = true; 
 
 let dbData = {}; 
 let saveTimeout = null;
+
+// 📅 페이지 구동 시 오늘 날짜의 연-월 계산 후 기본값 자동 매칭
+const initDate = new Date();
+const initYear = initDate.getFullYear();
+const initMonth = String(initDate.getMonth() + 1).padStart(2, '0');
+const currentYearMonthStr = `${initYear}-${initMonth}`;
+
+// 셀렉트 박스 동적 초기 선택 적용
+const monthSelectEl = document.getElementById('month-select');
+if (monthSelectEl) {
+  // 생성해놓은 옵션 중에 오늘 날짜에 맞는 월이 있다면 자동 선택
+  for (let option of monthSelectEl.options) {
+    if (option.value === currentYearMonthStr) {
+      option.selected = true;
+      break;
+    }
+  }
+}
 
 function toggleLockMode() {
   if (isLockedMode) {
@@ -178,7 +212,7 @@ function toggleLockMode() {
       const btn = document.getElementById('lock-toggle-btn');
       btn.textContent = "🔓 관리자 모드";
       btn.classList.add('admin-active');
-      toggleInputs(false);
+      renderAll(); // 과거 여부 무관하게 전체 입력창 개방용 리렌더
       alert("✅ 관리자 권한이 인증되었습니다. 명단 수정이 가능합니다.");
     } else if (pw !== null) {
       alert("비밀번호가 일치하지 않습니다.");
@@ -189,14 +223,9 @@ function toggleLockMode() {
     const btn = document.getElementById('lock-toggle-btn');
     btn.textContent = "🔒 보기 모드";
     btn.classList.remove('admin-active');
-    toggleInputs(true);
+    renderAll();
     alert("🔒 다시 안전하게 조회 전용 모드로 잠겼습니다.");
   }
-}
-
-function toggleInputs(disable) {
-  const inputs = document.querySelectorAll('.name-input');
-  inputs.forEach(input => input.disabled = disable);
 }
 
 function loadData() {
@@ -251,17 +280,22 @@ function renderAll() {
   }
   
   const currentMonthData = dbData[monthVal];
-  
   const listContainer = document.getElementById('list-container');
   listContainer.innerHTML = '';
   
   const daysInMonth = new Date(year, month, 0).getDate();
+  const todaySystem = new Date();
+  const todayCompareKey = new Date(todaySystem.getFullYear(), todaySystem.getMonth(), todaySystem.getDate()).getTime();
   
   for (let d = 1; d <= daysInMonth; d++) {
+    const targetCellTime = new Date(year, month - 1, d).getTime();
+    const isPastDay = targetCellTime < todayCompareKey; // 과거 날짜 감지 판정 코드
+    
     const dayOfWeek = new Date(year, month - 1, d).getDay(); 
     let dayClass = "";
     if (dayOfWeek === 0) dayClass = "sunday";
     if (dayOfWeek === 6) dayClass = "saturday";
+    if (isPastDay) dayClass += " past"; // 과거 클래스 누적
     
     const row = document.createElement('div');
     row.className = `row-item ${dayClass}`;
@@ -269,14 +303,16 @@ function renderAll() {
     const weekdayStr = ['일', '월', '화', '수', '목', '금', '토'][dayOfWeek];
     const savedValue = currentMonthData[d] || "";
     
+    // 🔒 보기 모드이면서 과거 날짜인 경우 인풋 활성화 원천 차단 조치
+    const isDisabled = isLockedMode ? (isPastDay || isLockedMode) : false;
+    
     row.innerHTML = `
       <div class="row-date-badge">${d}일 (${weekdayStr})</div>
-      <input type="text" class="name-input" data-day="${d}" id="input-day-${d}" placeholder="이름 또는 단체명 입력" value="${h(savedValue)}" ${isLockedMode ? 'disabled' : ''}>
+      <input type="text" class="name-input" data-day="${d}" id="input-day-${d}" placeholder="이름 또는 단체명 입력" value="${h(savedValue)}" ${isDisabled ? 'disabled' : ''}>
     `;
     
     const inputEl = row.querySelector('.name-input');
     
-    // ⭕ 실시간 타이핑 미러링 기능
     inputEl.addEventListener('input', (e) => {
       const dayKey = e.target.dataset.day;
       currentMonthData[dayKey] = e.target.value;
@@ -294,11 +330,10 @@ function renderAll() {
       saveData();
     });
 
-    // ⭕ [핵심 추가] 키보드 화살표 (위/아래) 입력칸 이동 로직 바인딩
     inputEl.addEventListener('keydown', (e) => {
       const currentDay = parseInt(e.target.dataset.day);
       if (e.key === "ArrowDown") {
-        e.preventDefault(); // 화면 스크롤 방지
+        e.preventDefault(); 
         const nextInput = document.getElementById(`input-day-${currentDay + 1}`);
         if (nextInput) nextInput.focus();
       } else if (e.key === "ArrowUp") {
@@ -315,7 +350,6 @@ function renderAll() {
   calBody.innerHTML = '';
   
   const firstDayIndex = new Date(year, month - 1, 1).getDay();
-  const todayObj = new Date();
   
   for (let i = 0; i < firstDayIndex; i++) {
     const blank = document.createElement('div');
@@ -328,7 +362,11 @@ function renderAll() {
     const cell = document.createElement('div');
     cell.className = 'calendar-cell';
     
-    if (todayObj.getFullYear() === year && (todayObj.getMonth() + 1) === month && todayObj.getDate() === d) {
+    const targetCellTime = new Date(year, month - 1, d).getTime();
+    const isPastDay = targetCellTime < todayCompareKey;
+    if (isPastDay) cell.classList.add('past'); // 달력 세포 음영 처리 부여
+    
+    if (todaySystem.getFullYear() === year && (todaySystem.getMonth() + 1) === month && todaySystem.getDate() === d) {
       cell.classList.add('today');
     }
     
