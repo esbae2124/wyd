@@ -177,15 +177,7 @@
   .item-main { display: flex; align-items: center; gap: 10px; }
   .item-dot { width: 6px; height: 6px; background: var(--success-border); border-radius: 50%; }
   .item-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
-  .today-badge {
-    font-size: 10px;
-    background: var(--accent-light);
-    color: var(--accent);
-    border: 1px solid var(--accent-mid);
-    border-radius: 4px;
-    padding: 1px 5px;
-    margin-left: 6px;
-  }
+  
   .item-actions-group { display: flex; gap: 4px; }
   .btn-action-text {
     background: none;
@@ -288,9 +280,13 @@
 
 <button class="btn-scroll-top" id="btn-top" onclick="scrollToTop()">↑</button>
 
+<footer class="site-footer">
+  지나간 날짜의 기도 봉헌은 자동으로 가려집니다
+</footer>
+
 <script>
-// ⚠️ 여기에 구글 Apps Script 새로 배포한 웹앱 URL 주소를 넣어주세요!
-const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbytlOBd8_3smnC5hDwgE6U1M_Zh95EAnt2Y8SeK0tZwVO6INTVzFi6QbwKNsnK31h8/exec';
+// ⚠️ 여기에 새로 복사한 구글 앱스 스크립트 웹 앱 주소를 꼭 작은따옴표 사이에 넣어주세요!
+const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyHNLRJiFHHwMXvexl-MZCR2Y-6aFYBUmf62XWidLseeoT--VaX5gFQd5Z5uB0Zbpk/exec';
 
 const DAYS = ['일','월','화','수','목','금','토'];
 const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
@@ -321,27 +317,35 @@ window.onscroll = function() {
 
 function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
-// A1 셀에서 전체 데이터 한 번에 가져오기
+// 구글 시트에서 가로세로 원본 데이터를 그대로 로드해오는 로직
 async function fetchEntries() {
-  if(!SCRIPT_WEB_APP_URL || SCRIPT_WEB_APP_URL.includes('YOUR_APPS_SCRIPT')) return;
+  if(!SCRIPT_WEB_APP_URL || SCRIPT_WEB_APP_URL.includes('YOUR_APPS_SCRIPT')) {
+    entries = JSON.parse(localStorage.getItem('rosary_row_backup') || '[]');
+    render();
+    return;
+  }
   try {
     const response = await fetch(SCRIPT_WEB_APP_URL);
     const data = await response.json();
     if (Array.isArray(data)) {
       entries = data;
+      localStorage.setItem('rosary_row_backup', JSON.stringify(entries));
       render();
     }
-  } catch (error) { console.warn("데이터 로드 실패:", error); }
+  } catch (error) { 
+    console.warn("실시간 연동 대기 중...", error); 
+    entries = JSON.parse(localStorage.getItem('rosary_row_backup') || '[]');
+    render();
+  }
 }
 
-// A1 셀에 전체 데이터 한 번에 저장하기
-async function saveAllToGoogle() {
+async function sendToGoogle(data) {
   if(!SCRIPT_WEB_APP_URL || SCRIPT_WEB_APP_URL.includes('YOUR_APPS_SCRIPT')) return;
   try {
     await fetch(SCRIPT_WEB_APP_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(entries)
+      body: JSON.stringify(data)
     });
   } catch(e) { console.error(e); }
 }
@@ -421,7 +425,7 @@ function renderList() {
       const dt = new Date(y, m-1, d);
       const isT = e.date === todayStr;
       h += `${lastDate ? '</div>' : ''}<div class="date-section">
-              <div class="date-header ${isT?'is-today':''}">${m}월 ${d}일 ${DAYS[dt.getDay()]}요일 ${isT?'· 오늘':''}</div>`;
+              <div class="date-header ${isT?'is-today':''}">${m}월 ${d}일 ${DAYS[dt.getDay()]}요일</div>`;
       lastDate = e.date;
     }
     h += `<div class="list-item">
@@ -487,26 +491,34 @@ async function saveModalData() {
   const newName = document.getElementById('modal-name-input').value.trim();
   if (!newName) { alert('이름을 입력해 주세요.'); return; }
   
+  // 기존 데이터 수정 시 시트에서 구 데이터 먼저 삭제 요청
   if (editingOldName) {
+    await sendToGoogle({ action: "delete", date: selectedDateStr, name: editingOldName });
     entries = entries.filter(e => !(e.date === selectedDateStr && e.name === editingOldName));
   }
   
+  // 시트에 한 행 추가 요청
+  await sendToGoogle({ action: "insert", date: selectedDateStr, name: newName });
   entries.push({ date: selectedDateStr, name: newName });
-  render();
-  closeInputModal();
   
-  // 변경된 전체 데이터를 구글 시트 A1 셀에 즉시 세이브
-  await saveAllToGoogle();
+  localStorage.setItem('rosary_row_backup', JSON.stringify(entries));
+  closeInputModal();
+  render();
+  
+  // 1.5초 후 구글 데이터와 강제 싱크 동기화
+  setTimeout(fetchEntries, 1500);
 }
 
 async function deleteData(dateStr, name) {
   if (!confirm(`${name} 님의 기도를 삭제할까요?`)) return;
   
+  await sendToGoogle({ action: "delete", date: dateStr, name: name });
   entries = entries.filter(e => !(e.date === dateStr && e.name === name));
-  render();
-  closeDetailModal();
+  localStorage.setItem('rosary_row_backup', JSON.stringify(entries));
   
-  await saveAllToGoogle();
+  closeDetailModal();
+  render();
+  setTimeout(fetchEntries, 1500);
 }
 
 function render() {
