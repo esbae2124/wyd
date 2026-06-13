@@ -35,7 +35,6 @@
   --success:#2d6b32;
   --success-light:#edf4ee;
   
-  /* 🎨 지나간 날짜용 음영 처리 색상 추가 */
   --past-bg:#eae6df;
   --past-opacity:0.45;
 }
@@ -64,27 +63,28 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:2
 .save-indicator{margin-left:auto;font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px}
 
 .calendar-container{padding:16px}
-.calendar-grid{display:grid;grid-template-columns:repeat(7, 1fr);gap:4px;text-align:center}
+
+/* 📐 [수정] 7개 열 너비를 무조건 균등하게 강제 고정 (minmax(0, 1fr)) */
+.calendar-grid{display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));gap:4px;text-align:center}
 .calendar-day-header{font-size:12px;font-weight:500;color:var(--text-muted);padding:5px 0}
 .calendar-day-header:nth-child(1){color:var(--danger)}
 .calendar-day-header:nth-child(7){color:#5a82c0}
 
-/* 달력 세포 디자인 */
-.calendar-cell{min-height:90px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:4px}
+/* 📐 [수정] 너비 고정 시 칩이 넘쳐서 격자를 부수지 못하게 width: 100% 및 내부 스펙 지정 */
+.calendar-cell{min-height:95px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:3px;box-sizing:border-box}
 .calendar-cell.other-month{background:transparent;border-color:transparent;opacity:0.3;pointer-events:none}
 .calendar-cell.today{background:#f0ebe3;border:1.5px solid #8b6c47}
 
-/* 🔒 [수정] 지나간 날짜 음영 처리용 스타일 */
 .calendar-cell.past{background:var(--past-bg);opacity:var(--past-opacity)}
 
-.calendar-cell .day-num{font-size:11px;font-weight:500;color:var(--text-muted)}
+.calendar-cell .day-num{font-size:11px;font-weight:500;color:var(--text-muted);margin-bottom:2px}
 .calendar-cell:nth-child(7n+1) .day-num{color:var(--danger)}
 .calendar-cell:nth-child(7n) .day-num{color:#5a82c0}
 .calendar-cell.today .day-num{color:var(--accent);font-weight:bold}
 
-.calendar-cell .list-names{width:100%;font-size:10px;color:var(--success);background:var(--success-light);font-weight:500;border-radius:3px;padding:1px 3px;text-align:center;word-break:break-all;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* 🔒 지나간 칸 내부의 명단 칩 색상도 차분하게 톤다운 */
-.calendar-cell.past .list-names{color:var(--text-secondary);background:var(--border)}
+.calendar-cell .names-container{width:100%;display:flex;flex-direction:column;gap:2px;box-sizing:border-box}
+.calendar-cell .name-chip{width:100%;font-size:10px;color:var(--success);background:var(--success-light);font-weight:500;border-radius:3px;padding:1px 3px;text-align:center;word-break:break-all;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box}
+.calendar-cell.past .name-chip{color:var(--text-secondary);background:var(--border)}
 
 .list-panel{max-height:calc(100vh - 180px);overflow-y:auto;position:sticky;top:20px}
 .list-body{padding:12px}
@@ -93,7 +93,6 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:2
 .row-item:hover{background:var(--bg)}
 .row-item:last-child{border-bottom:none}
 
-/* 🔒 [수정] 명단 목록 중 지나간 날짜 영역 음영 처리 */
 .row-item.past{background:var(--past-bg);opacity:0.8}
 .row-item.past:hover{background:var(--past-bg)}
 
@@ -104,7 +103,6 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:2
 .name-input{flex:1;padding:6px 10px;font-size:13px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);outline:none;transition:border-color 0.15s}
 .name-input:focus{border-color:var(--accent-mid)}
 
-/* ✍️ [수정] 플레이스홀더 글씨 연회색 지정 및 지나간 인풋 비활성화 디자인 */
 .name-input::placeholder{color:#ccc}
 body.is-locked .name-input{background:var(--surface);color:var(--text-secondary);cursor:not-allowed;border-style:solid}
 body.is-locked .row-item.past .name-input{background:transparent;border-color:transparent}
@@ -185,16 +183,13 @@ let isLockedMode = true;
 let dbData = {}; 
 let saveTimeout = null;
 
-// 📅 페이지 구동 시 오늘 날짜의 연-월 계산 후 기본값 자동 매칭
 const initDate = new Date();
 const initYear = initDate.getFullYear();
 const initMonth = String(initDate.getMonth() + 1).padStart(2, '0');
 const currentYearMonthStr = `${initYear}-${initMonth}`;
 
-// 셀렉트 박스 동적 초기 선택 적용
 const monthSelectEl = document.getElementById('month-select');
 if (monthSelectEl) {
-  // 생성해놓은 옵션 중에 오늘 날짜에 맞는 월이 있다면 자동 선택
   for (let option of monthSelectEl.options) {
     if (option.value === currentYearMonthStr) {
       option.selected = true;
@@ -212,7 +207,7 @@ function toggleLockMode() {
       const btn = document.getElementById('lock-toggle-btn');
       btn.textContent = "🔓 관리자 모드";
       btn.classList.add('admin-active');
-      renderAll(); // 과거 여부 무관하게 전체 입력창 개방용 리렌더
+      renderAll(); 
       alert("✅ 관리자 권한이 인증되었습니다. 명단 수정이 가능합니다.");
     } else if (pw !== null) {
       alert("비밀번호가 일치하지 않습니다.");
@@ -271,6 +266,25 @@ function onMonthChange() {
   renderAll();
 }
 
+function updateCalendarCellText(dayKey, fullText) {
+  const containerEl = document.getElementById(`cal-container-${dayKey}`);
+  if(!containerEl) return;
+  
+  containerEl.innerHTML = ''; 
+  if(!fullText || fullText.trim() === "") return;
+  
+  const namesArray = fullText.split(',')
+                             .map(name => name.trim())
+                             .filter(name => name !== "");
+  
+  namesArray.forEach(name => {
+    const chip = document.createElement('div');
+    chip.className = 'name-chip';
+    chip.textContent = name;
+    containerEl.appendChild(chip);
+  });
+}
+
 function renderAll() {
   const monthVal = document.getElementById('month-select').value; 
   const [year, month] = monthVal.split('-').map(Number);
@@ -289,13 +303,13 @@ function renderAll() {
   
   for (let d = 1; d <= daysInMonth; d++) {
     const targetCellTime = new Date(year, month - 1, d).getTime();
-    const isPastDay = targetCellTime < todayCompareKey; // 과거 날짜 감지 판정 코드
+    const isPastDay = targetCellTime < todayCompareKey; 
     
     const dayOfWeek = new Date(year, month - 1, d).getDay(); 
     let dayClass = "";
     if (dayOfWeek === 0) dayClass = "sunday";
     if (dayOfWeek === 6) dayClass = "saturday";
-    if (isPastDay) dayClass += " past"; // 과거 클래스 누적
+    if (isPastDay) dayClass += " past"; 
     
     const row = document.createElement('div');
     row.className = `row-item ${dayClass}`;
@@ -303,7 +317,6 @@ function renderAll() {
     const weekdayStr = ['일', '월', '화', '수', '목', '금', '토'][dayOfWeek];
     const savedValue = currentMonthData[d] || "";
     
-    // 🔒 보기 모드이면서 과거 날짜인 경우 인풋 활성화 원천 차단 조치
     const isDisabled = isLockedMode ? (isPastDay || isLockedMode) : false;
     
     row.innerHTML = `
@@ -316,17 +329,7 @@ function renderAll() {
     inputEl.addEventListener('input', (e) => {
       const dayKey = e.target.dataset.day;
       currentMonthData[dayKey] = e.target.value;
-      
-      const calTextEl = document.getElementById(`cal-text-${dayKey}`);
-      if(calTextEl) {
-        if(e.target.value.trim() !== "") {
-          calTextEl.textContent = e.target.value;
-          calTextEl.style.display = "block";
-        } else {
-          calTextEl.textContent = "";
-          calTextEl.style.display = "none";
-        }
-      }
+      updateCalendarCellText(dayKey, e.target.value);
       saveData();
     });
 
@@ -364,7 +367,7 @@ function renderAll() {
     
     const targetCellTime = new Date(year, month - 1, d).getTime();
     const isPastDay = targetCellTime < todayCompareKey;
-    if (isPastDay) cell.classList.add('past'); // 달력 세포 음영 처리 부여
+    if (isPastDay) cell.classList.add('past'); 
     
     if (todaySystem.getFullYear() === year && (todaySystem.getMonth() + 1) === month && todaySystem.getDate() === d) {
       cell.classList.add('today');
@@ -373,10 +376,11 @@ function renderAll() {
     const nameVal = currentMonthData[d] || "";
     cell.innerHTML = `
       <span class="day-num">${d}</span>
-      <div class="list-names" id="cal-text-${d}" style="${nameVal.trim()===''?'display:none':''}">${h(nameVal)}</div>
+      <div class="names-container" id="cal-container-${d}"></div>
     `;
     
     calBody.appendChild(cell);
+    updateCalendarCellText(d, nameVal);
   }
 }
 
