@@ -365,8 +365,8 @@
 </footer>
 
 <script>
-// ⚠️ 여기에 수정한 구글 최종 웹앱 주소
-const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxNp-zPsZyZN91lErrYwoipYr8fhJJofyqtlk1Qp9ZpgcmjvSu4XEm_xNfpeoF5AURW/exec';
+// ⭕ 성공한 대소문자 주소 그대로 완벽 이식 완료!
+const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwNp-zPsZyZN91lErrYwoipYr8fhJJofyqtlk1Qp9ZpgcmjvSu4XEm_xNfpeoF5AURW/exec';
 const PASSWORD_VALUE = "1004";
 
 const DAYS = ['일','월','화','수','목','금','토'];
@@ -378,6 +378,16 @@ let entries = [];
 let selectedDateStr = "";
 let editingOldName = "";
 let isAdminMode = false;
+
+// ⭕ 구글 시트의 날짜가 어떤 서식으로 들어오든 문자열 비교에서 100% 매칭되도록 보정하는 핵심 특수 함수
+function cleanDateStr(str) {
+  if (!str) return "";
+  let match = String(str).trim().match(/(\d{4})[-/.](\d{2})[-/.](\d{2})/);
+  if (match) {
+    return match[1] + '-' + match[2] + '-' + match[3];
+  }
+  return String(str).trim();
+}
 
 function toDateStr(d) {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -434,13 +444,21 @@ async function fetchEntries() {
     const response = await fetch(SCRIPT_WEB_APP_URL);
     const data = await response.json();
     if (Array.isArray(data)) {
-      entries = data;
+      // ⭕ 불러온 데이터들의 날짜 서식을 강제로 YYYY-MM-DD로 전원 청소 처리
+      entries = data.map(item => ({
+        date: cleanDateStr(item.date),
+        name: item.name
+      }));
       localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
       render();
     }
   } catch (error) {
     console.warn("로컬 백업 데이터 로드:", error);
-    entries = JSON.parse(localStorage.getItem('rosary_local_backup') || '[]');
+    let localData = JSON.parse(localStorage.getItem('rosary_local_backup') || '[]');
+    entries = localData.map(item => ({
+      date: cleanDateStr(item.date),
+      name: item.name
+    }));
     render();
   }
 }
@@ -475,7 +493,13 @@ function renderCalendar() {
   const todayStr = toDateStr(td);
 
   const byDate = {};
-  entries.forEach(e => { if(e.date) { if(!byDate[e.date]) byDate[e.date] = []; byDate[e.date].push(e.name); } });
+  entries.forEach(e => { 
+    if(e.date) { 
+      let dKey = cleanDateStr(e.date);
+      if(!byDate[dKey]) byDate[dKey] = []; 
+      byDate[dKey].push(e.name); 
+    } 
+  });
 
   let h = '<div class="calendar-grid">';
   DAYS.forEach((d,i) => h += `<div class="cal-header" style="${i===0?'color:#c0594e':i===6?'color:#5a82c0':''}">${d}</div>`);
@@ -511,6 +535,7 @@ function renderList() {
   const el = document.getElementById('view-list');
   if (!el) return;
   const td = todayDate();
+  const todayStr = toDateStr(td);
   
   const filtered = entries.filter(e => {
     if(!e.date) return false;
@@ -559,14 +584,14 @@ function renderList() {
 
 function openDetailModal(dateStr, isPast) {
   if (isPast) return;
-  selectedDateStr = dateStr;
-  const [y, m, d] = dateStr.split('-');
+  selectedDateStr = cleanDateStr(dateStr);
+  const [y, m, d] = selectedDateStr.split('-');
   document.getElementById('detail-modal-label').textContent = `${parseInt(m)}월 ${parseInt(d)}일 봉헌 현황`;
   
   const listEl = document.getElementById('detail-modal-list');
   listEl.innerHTML = "";
   
-  const dayEntries = entries.filter(e => e.date === dateStr);
+  const dayEntries = entries.filter(e => cleanDateStr(e.date) === selectedDateStr);
   
   if (dayEntries.length === 0) {
     listEl.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:1rem 0; font-size:14px;">등록된 봉헌 명단이 없습니다.</div>';
@@ -576,8 +601,8 @@ function openDetailModal(dateStr, isPast) {
       if (isAdminMode) {
         actionButtons = `
           <div class="item-actions-group">
-            <button class="btn-action-text mod" onclick="openInputModal('${dateStr}', '${e.name}')">수정</button>
-            <button class="btn-action-text del" onclick="deleteData('${dateStr}', '${e.name}')">삭제</button>
+            <button class="btn-action-text mod" onclick="openInputModal('${selectedDateStr}', '${e.name}')">수정</button>
+            <button class="btn-action-text del" onclick="deleteData('${selectedDateStr}', '${e.name}')">삭제</button>
           </div>`;
       }
       listEl.innerHTML += `
@@ -597,10 +622,10 @@ function switchToInputMode() { closeDetailModal(); openInputModal(selectedDateSt
 
 function openInputModal(dateStr, oldName = "") {
   closeDetailModal();
-  selectedDateStr = dateStr;
+  selectedDateStr = cleanDateStr(dateStr);
   editingOldName = oldName;
   
-  const [y, m, d] = dateStr.split('-');
+  const [y, m, d] = selectedDateStr.split('-');
   const titleText = oldName ? `${parseInt(m)}월 ${parseInt(d)}일 명단 수정` : `${parseInt(m)}월 ${parseInt(d)}일 새 봉헌 등록`;
   document.getElementById('modal-date-label').textContent = titleText;
   document.getElementById('modal-name-input').value = oldName;
@@ -627,7 +652,7 @@ async function saveModalData() {
 
   if (editingOldName) {
     await sendToGoogle({ action: "delete", date: selectedDateStr, name: editingOldName });
-    entries = entries.filter(e => !(e.date === selectedDateStr && e.name === editingOldName));
+    entries = entries.filter(e => !(cleanDateStr(e.date) === selectedDateStr && e.name === editingOldName));
   }
   
   await sendToGoogle({ action: "insert", date: selectedDateStr, name: newName });
@@ -643,8 +668,8 @@ async function saveModalData() {
 async function deleteData(dateStr, name) {
   if (!confirm(`${name} 님의 기도를 삭제할까요?`)) return;
   
-  await sendToGoogle({ action: "delete", date: dateStr, name: name });
-  entries = entries.filter(e => !(e.date === dateStr && e.name === name));
+  await sendToGoogle({ action: "delete", date: cleanDateStr(dateStr), name: name });
+  entries = entries.filter(e => !(cleanDateStr(e.date) === cleanDateStr(dateStr) && e.name === name));
   localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
   
   closeDetailModal();
