@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>거여동성당 묵주기도 고리기도 봉헌 시간표</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght=400;600&family=Noto+Sans+KR:wght=300;400;500&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -59,7 +59,6 @@
 
   .container { max-width: 640px; margin: 0 auto; padding: 1rem 0.5rem 3rem; }
 
-  /* Toolbar */
   .toolbar {
     display: flex;
     align-items: center;
@@ -88,7 +87,6 @@
     justify-content: center;
   }
 
-  /* View Tabs */
   .view-tabs { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
   .tab {
     background: var(--surface);
@@ -102,7 +100,6 @@
   .tab:first-child { border-right: 1px solid var(--border); }
   .tab.active { background: var(--accent); color: #fff; }
 
-  /* Calendar Grid */
   .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -158,7 +155,6 @@
     text-align: center;
   }
 
-  /* List View Styling */
   .list-wrapper { display: none; padding: 0 0.5rem; }
   .date-section { margin-bottom: 1.25rem; }
   .date-header {
@@ -207,7 +203,6 @@
   .btn-action-text.mod { color: var(--accent); background: var(--accent-light); }
   .btn-action-text.del { color: #c0504e; background: #fde8e8; }
 
-  /* Modals (Popups) */
   .modal {
     display: none;
     position: fixed;
@@ -242,7 +237,6 @@
   .btn-modal-save { background: var(--accent); color: white; }
   .btn-modal-cancel { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
 
-  /* Expanded View List in Modal */
   .expanded-list {
     display: flex;
     flex-direction: column;
@@ -354,8 +348,8 @@
 </footer>
 
 <script>
-// ⚠️ 여기에 구글 Apps Script 웹앱 URL 주소 딱 하나만 넣어주세요!
-const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby_nImG7NPrhK8Hs2qsUS3Fh8qLHalPM3E4QWl-T-AtneR-KKDJ8LSWe9WKgI2afC28/exec';
+// ⚠️ 여기에 구글 Apps Script 새로 배포한 웹앱 URL 주소 딱 하나만 넣어주세요!
+const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyvqWxPbI3qrhSIHMBCZ5FaszIn3tdqMCrNqa-ttNQzJZhbjHAi16dY4u16NU93-WBb/exec';
 
 const usePassword = true; 
 const PASSWORD_VALUE = "1004";
@@ -391,7 +385,6 @@ function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// 구글 웹 앱을 통해 실시간(0초)으로 데이터를 다이렉트 로드하도록 완전히 변경
 async function fetchEntries() {
   if(!SCRIPT_WEB_APP_URL || SCRIPT_WEB_APP_URL.includes('YOUR_APPS_SCRIPT')) {
     entries = JSON.parse(localStorage.getItem('rosary_local_backup') || '[]');
@@ -419,7 +412,7 @@ async function sendToGoogle(data) {
     try {
       await fetch(SCRIPT_WEB_APP_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain' }, // CORS 충돌 원천 차단
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(data)
       });
     } catch(e) { console.error(e); }
@@ -531,104 +524,4 @@ function openDetailModal(dateStr, isPast) {
   const listEl = document.getElementById('detail-modal-list');
   listEl.innerHTML = "";
   
-  const dayEntries = entries.filter(e => e.date === dateStr);
-  
-  if (dayEntries.length === 0) {
-    listEl.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:1rem 0; font-size:14px;">등록된 봉헌 명단이 없습니다.</div>';
-  } else {
-    dayEntries.forEach(e => {
-      listEl.innerHTML += `
-        <div class="expanded-item">
-          <span class="expanded-name">${e.name}</span>
-          <div class="item-actions-group">
-            <button class="btn-action-text mod" onclick="openInputModal('${dateStr}', '${e.name}')">수정</button>
-            <button class="btn-action-text del" onclick="deleteData('${dateStr}', '${e.name}')">삭제</button>
-          </div>
-        </div>`;
-    });
-  }
-  
-  document.getElementById('detail-modal').style.display = 'flex';
-}
-
-function closeDetailModal() { document.getElementById('detail-modal').style.display = 'none'; }
-function switchToInputMode() { closeDetailModal(); openInputModal(selectedDateStr, ""); }
-
-function openInputModal(dateStr, oldName = "") {
-  closeDetailModal();
-  selectedDateStr = dateStr;
-  editingOldName = oldName;
-  
-  const [y, m, d] = dateStr.split('-');
-  const titleText = oldName ? `${parseInt(m)}월 ${parseInt(d)}일 명단 수정` : `${parseInt(m)}월 ${parseInt(d)}일 새 봉헌 등록`;
-  document.getElementById('modal-date-label').textContent = titleText;
-  document.getElementById('modal-name-input').value = oldName;
-  
-  document.getElementById('input-modal').style.display = 'flex';
-  document.getElementById('modal-name-input').focus();
-}
-
-function closeInputModal() {
-  document.getElementById('input-modal').style.display = 'none';
-  editingOldName = "";
-}
-
-async function saveModalData() {
-  const newName = document.getElementById('modal-name-input').value.trim();
-  if (!newName) { alert('이름을 입력해 주세요.'); return; }
-  
-  if (usePassword) {
-    const pw = prompt("수정 비밀번호를 입력하세요:");
-    if (pw !== PASSWORD_VALUE) { alert("비밀번호가 틀렸습니다."); return; }
-  }
-
-  if (editingOldName) {
-    await sendToGoogle({ action: "delete", date: selectedDateStr, name: editingOldName });
-    entries = entries.filter(e => !(e.date === selectedDateStr && e.name === editingOldName));
-  }
-  
-  await sendToGoogle({ action: "insert", date: selectedDateStr, name: newName });
-  entries.push({ date: selectedDateStr, name: newName });
-  
-  localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
-  
-  alert('저장되었습니다!');
-  closeInputModal();
-  render();
-  setTimeout(fetchEntries, 1000); // 1초 뒤 다이렉트 실시간 갱신
-}
-
-async function deleteData(dateStr, name) {
-  if (!confirm(`${name} 님의 기도를 삭제할까요?`)) return;
-  if (usePassword) {
-    const pw = prompt("수정 비밀번호를 입력하세요:");
-    if (pw !== PASSWORD_VALUE) { alert("비밀번호가 틀렸습니다."); return; }
-  }
-  
-  await sendToGoogle({ action: "delete", date: dateStr, name: name });
-  entries = entries.filter(e => !(e.date === dateStr && e.name === name));
-  localStorage.setItem('rosary_local_backup', JSON.stringify(entries));
-  
-  alert('삭제되었습니다.');
-  closeDetailModal();
-  render();
-  setTimeout(fetchEntries, 1000);
-}
-
-function render() {
-  const label = document.getElementById('month-label');
-  if(label) label.textContent = `${curYear}년 ${MONTHS[curMonth]}`;
-  if (view === 'calendar') renderCalendar(); else renderList();
-}
-
-function prevMonth() { curMonth--; if (curMonth < 0) { curMonth = 11; curYear--; } render(); }
-function nextMonth() { curMonth++; if (curMonth > 11) { curMonth = 0; curYear++; } render(); }
-
-const now = new Date();
-curYear = now.getFullYear();
-curMonth = now.getMonth();
-
-fetchEntries();
-</script>
-</body>
-</html>
+  const dayEntries = entries.filter(e => e.date ===
